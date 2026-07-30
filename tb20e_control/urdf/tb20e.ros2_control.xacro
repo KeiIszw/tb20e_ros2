@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<!-- Copyright 2026 tb20e_ros2 contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro
+    name="tb20e_ros2_control"
+    params="
+      name
+      boom_position_min_deg boom_position_max_deg
+      arm_position_min_deg arm_position_max_deg
+      bucket_position_min_deg bucket_position_max_deg">
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <plugin>tb20e_control/Tb20eLeverHardware</plugin>
+
+        <param name="state_timeout_sec">$(arg state_timeout_sec)</param>
+        <param name="initial_feedback_wait_sec">$(arg initial_feedback_wait_sec)</param>
+        <param name="feedback_limit_tolerance_deg">$(arg feedback_limit_tolerance_deg)</param>
+        <param name="max_feedback_velocity_deg_s">$(arg max_feedback_velocity_deg_s)</param>
+
+        <param name="swing_state_topic">$(arg swing_state_topic)</param>
+        <param name="swing_command_topic">$(arg swing_command_topic)</param>
+        <param name="swing_lever_sign">$(arg swing_lever_sign)</param>
+        <param name="swing_lever_min">$(arg swing_lever_min)</param>
+        <param name="swing_lever_max">$(arg swing_lever_max)</param>
+
+        <param name="boom_state_topic">$(arg boom_state_topic)</param>
+        <param name="boom_command_topic">$(arg boom_command_topic)</param>
+        <param name="boom_lever_sign">$(arg boom_lever_sign)</param>
+        <param name="boom_lever_min">$(arg boom_lever_min)</param>
+        <param name="boom_lever_max">$(arg boom_lever_max)</param>
+        <param name="boom_position_min_deg">${boom_position_min_deg}</param>
+        <param name="boom_position_max_deg">${boom_position_max_deg}</param>
+
+        <param name="arm_state_topic">$(arg arm_state_topic)</param>
+        <param name="arm_command_topic">$(arg arm_command_topic)</param>
+        <param name="arm_lever_sign">$(arg arm_lever_sign)</param>
+        <param name="arm_lever_min">$(arg arm_lever_min)</param>
+        <param name="arm_lever_max">$(arg arm_lever_max)</param>
+        <param name="arm_position_min_deg">${arm_position_min_deg}</param>
+        <param name="arm_position_max_deg">${arm_position_max_deg}</param>
+
+        <param name="bucket_state_topic">$(arg bucket_state_topic)</param>
+        <param name="bucket_command_topic">$(arg bucket_command_topic)</param>
+        <param name="bucket_lever_sign">$(arg bucket_lever_sign)</param>
+        <param name="bucket_lever_min">$(arg bucket_lever_min)</param>
+        <param name="bucket_lever_max">$(arg bucket_lever_max)</param>
+        <param name="bucket_position_min_deg">${bucket_position_min_deg}</param>
+        <param name="bucket_position_max_deg">${bucket_position_max_deg}</param>
+      </hardware>
+
+      <joint name="swing_joint">
+        <command_interface name="effort">
+          <param name="min">$(arg swing_lever_min)</param>
+          <param name="max">$(arg swing_lever_max)</param>
+        </command_interface>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <joint name="boom_joint">
+        <command_interface name="effort">
+          <param name="min">$(arg boom_lever_min)</param>
+          <param name="max">$(arg boom_lever_max)</param>
+        </command_interface>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <joint name="arm_joint">
+        <command_interface name="effort">
+          <param name="min">$(arg arm_lever_min)</param>
+          <param name="max">$(arg arm_lever_max)</param>
+        </command_interface>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <joint name="bucket_joint">
+        <command_interface name="effort">
+          <param name="min">$(arg bucket_lever_min)</param>
+          <param name="max">$(arg bucket_lever_max)</param>
+        </command_interface>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+    </ros2_control>
+  </xacro:macro>
+</robot>

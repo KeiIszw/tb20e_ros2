@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+<!-- Copyright 2026 tb20e_ros2 contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="tb20e">
+  <xacro:arg name="state_timeout_sec" default="0.10"/>
+  <xacro:arg name="initial_feedback_wait_sec" default="2.0"/>
+  <xacro:arg name="feedback_limit_tolerance_deg" default="2.0"/>
+  <xacro:arg name="max_feedback_velocity_deg_s" default="180.0"/>
+
+  <xacro:property name="boom_position_min_deg" value="-83.0"/>
+  <xacro:property name="boom_position_max_deg" value="48.0"/>
+  <xacro:property name="arm_position_min_deg" value="32.0"/>
+  <xacro:property name="arm_position_max_deg" value="155.0"/>
+  <xacro:property name="bucket_position_min_deg" value="-31.0"/>
+  <xacro:property name="bucket_position_max_deg" value="159.0"/>
+
+  <xacro:arg name="swing_state_topic" default="/current_swing_angle"/>
+  <xacro:arg name="swing_command_topic" default="/manipulated_swing_lever"/>
+  <xacro:arg name="swing_lever_sign" default="1.0"/>
+  <xacro:arg name="swing_lever_min" default="-100.0"/>
+  <xacro:arg name="swing_lever_max" default="100.0"/>
+
+  <xacro:arg name="boom_state_topic" default="/current_boom_angle"/>
+  <xacro:arg name="boom_command_topic" default="/manipulated_boom_lever"/>
+  <xacro:arg name="boom_lever_sign" default="-1.0"/>
+  <xacro:arg name="boom_lever_min" default="-100.0"/>
+  <xacro:arg name="boom_lever_max" default="100.0"/>
+
+  <xacro:arg name="arm_state_topic" default="/current_arm_angle"/>
+  <xacro:arg name="arm_command_topic" default="/manipulated_arm_lever"/>
+  <xacro:arg name="arm_lever_sign" default="1.0"/>
+  <xacro:arg name="arm_lever_min" default="-100.0"/>
+  <xacro:arg name="arm_lever_max" default="100.0"/>
+
+  <xacro:arg name="bucket_state_topic" default="/current_bucket_angle"/>
+  <xacro:arg name="bucket_command_topic" default="/manipulated_bucket_lever"/>
+  <xacro:arg name="bucket_lever_sign" default="1.0"/>
+  <xacro:arg name="bucket_lever_min" default="-100.0"/>
+  <xacro:arg name="bucket_lever_max" default="100.0"/>
+
+  <xacro:include filename="$(find tb20e_control)/urdf/tb20e.ros2_control.xacro"/>
+
+  <material name="tb20e_yellow">
+    <color rgba="0.95 0.62 0.05 1.0"/>
+  </material>
+  <material name="tb20e_dark">
+    <color rgba="0.12 0.14 0.16 1.0"/>
+  </material>
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0.20"/>
+      <geometry>
+        <box size="1.55 1.25 0.40"/>
+      </geometry>
+      <material name="tb20e_dark"/>
+    </visual>
+  </link>
+
+  <link name="swing_link">
+    <visual>
+      <origin xyz="0 0 0.22"/>
+      <geometry>
+        <cylinder radius="0.56" length="0.44"/>
+      </geometry>
+      <material name="tb20e_yellow"/>
+    </visual>
+  </link>
+
+  <joint name="swing_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="swing_link"/>
+    <origin xyz="0 0 0.40"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100.0" velocity="1.5"/>
+    <dynamics damping="0.05" friction="0.02"/>
+  </joint>
+
+  <link name="boom_link">
+    <visual>
+      <origin xyz="0.90 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="1.80 0.22 0.24"/>
+      </geometry>
+      <material name="tb20e_yellow"/>
+    </visual>
+  </link>
+
+  <joint name="boom_joint" type="revolute">
+    <parent link="swing_link"/>
+    <child link="boom_link"/>
+    <origin xyz="0.20 0 0.50"/>
+    <axis xyz="0 1 0"/>
+    <!-- -83 deg to 48 deg -->
+    <limit
+      lower="${radians(boom_position_min_deg)}"
+      upper="${radians(boom_position_max_deg)}"
+      effort="100.0"
+      velocity="1.2"/>
+    <dynamics damping="0.05" friction="0.02"/>
+  </joint>
+
+  <link name="arm_link">
+    <visual>
+      <origin xyz="0.75 0 0"/>
+      <geometry>
+        <box size="1.50 0.18 0.20"/>
+      </geometry>
+      <material name="tb20e_yellow"/>
+    </visual>
+  </link>
+
+  <joint name="arm_joint" type="revolute">
+    <parent link="boom_link"/>
+    <child link="arm_link"/>
+    <origin xyz="1.80 0 0"/>
+    <axis xyz="0 1 0"/>
+    <!-- 32 deg to 155 deg -->
+    <limit
+      lower="${radians(arm_position_min_deg)}"
+      upper="${radians(arm_position_max_deg)}"
+      effort="100.0"
+      velocity="1.2"/>
+    <dynamics damping="0.05" friction="0.02"/>
+  </joint>
+
+  <link name="bucket_link">
+    <visual>
+      <origin xyz="0.35 0 -0.10"/>
+      <geometry>
+        <box size="0.70 0.65 0.42"/>
+      </geometry>
+      <material name="tb20e_dark"/>
+    </visual>
+  </link>
+
+  <joint name="bucket_joint" type="revolute">
+    <parent link="arm_link"/>
+    <child link="bucket_link"/>
+    <origin xyz="1.50 0 0"/>
+    <axis xyz="0 1 0"/>
+    <!-- -31 deg to 159 deg -->
+    <limit
+      lower="${radians(bucket_position_min_deg)}"
+      upper="${radians(bucket_position_max_deg)}"
+      effort="100.0"
+      velocity="1.5"/>
+    <dynamics damping="0.05" friction="0.02"/>
+  </joint>
+
+  <xacro:tb20e_ros2_control
+    name="Tb20eLeverSystem"
+    boom_position_min_deg="${boom_position_min_deg}"
+    boom_position_max_deg="${boom_position_max_deg}"
+    arm_position_min_deg="${arm_position_min_deg}"
+    arm_position_max_deg="${arm_position_max_deg}"
+    bucket_position_min_deg="${bucket_position_min_deg}"
+    bucket_position_max_deg="${bucket_position_max_deg}"/>
+</robot>
