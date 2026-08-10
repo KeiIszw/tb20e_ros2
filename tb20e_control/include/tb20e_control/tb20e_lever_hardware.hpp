@@ -1,5 +1,16 @@
 // Copyright 2026 tb20e_ros2 contributors
-// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #ifndef TB20E_CONTROL__TB20E_LEVER_HARDWARE_HPP_
 #define TB20E_CONTROL__TB20E_LEVER_HARDWARE_HPP_
@@ -128,9 +139,9 @@ private:
 
   rclcpp::Node::SharedPtr node_;
   std::array<rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr, kAxisCount>
-    command_publishers_{};
+  command_publishers_{};
   std::array<rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr, kAxisCount>
-    state_subscriptions_{};
+  state_subscriptions_{};
   std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> executor_;
   std::thread executor_thread_;
 };
