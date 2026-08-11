@@ -13,6 +13,7 @@
   <xacro:property name="arm_position_max_deg" value="155.0"/>
   <xacro:property name="bucket_position_min_deg" value="-31.0"/>
   <xacro:property name="bucket_position_max_deg" value="159.0"/>
+  <xacro:property name="joint_velocity_limit_deg_s" value="100.0"/>
 
   <xacro:arg name="swing_state_topic" default="/current_swing_angle"/>
   <xacro:arg name="swing_command_topic" default="/manipulated_swing_lever"/>
@@ -72,7 +73,7 @@
     <child link="swing_link"/>
     <origin xyz="0 0 0.40"/>
     <axis xyz="0 0 1"/>
-    <limit effort="100.0" velocity="1.5"/>
+    <limit effort="100.0" velocity="${radians(joint_velocity_limit_deg_s)}"/>
     <dynamics damping="0.05" friction="0.02"/>
   </joint>
 
@@ -96,7 +97,7 @@
       lower="${radians(boom_position_min_deg)}"
       upper="${radians(boom_position_max_deg)}"
       effort="100.0"
-      velocity="1.2"/>
+      velocity="${radians(joint_velocity_limit_deg_s)}"/>
     <dynamics damping="0.05" friction="0.02"/>
   </joint>
 
@@ -120,7 +121,7 @@
       lower="${radians(arm_position_min_deg)}"
       upper="${radians(arm_position_max_deg)}"
       effort="100.0"
-      velocity="1.2"/>
+      velocity="${radians(joint_velocity_limit_deg_s)}"/>
     <dynamics damping="0.05" friction="0.02"/>
   </joint>
 
@@ -144,7 +145,7 @@
       lower="${radians(bucket_position_min_deg)}"
       upper="${radians(bucket_position_max_deg)}"
       effort="100.0"
-      velocity="1.5"/>
+      velocity="${radians(joint_velocity_limit_deg_s)}"/>
     <dynamics damping="0.05" friction="0.02"/>
   </joint>
 

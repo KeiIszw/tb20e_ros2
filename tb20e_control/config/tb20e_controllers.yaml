@@ -52,7 +52,7 @@ tb20e_controller:
         d: 2.5
 
     constraints:
-      goal_time: 5.0
+      goal_time: 30.0
       stopped_velocity_tolerance: 0.05
       swing_joint:
         goal: 0.04

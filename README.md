@@ -15,6 +15,8 @@ ROS 2 Humble / Ubuntu 22.04 を対象にしています。
 
 `effort` command interface は PID 出力を hardware interface へ渡すために使用します。
 ここでの値は物理的なトルクではなく、レバー操作率（percent）です。
+Unity側ではレバー操作率100%を100 degree/sとして扱い、URDFの全関節の
+速度上限も100 degree/sに合わせています。
 
 スイング角は `[-pi, pi]` に正規化し、速度計算時にも `+pi` と `-pi` の境界を
 最短角度差で処理します。hardware の activate 時は、4軸すべての新しい角度feedbackが
@@ -92,6 +94,8 @@ ros2 action send_goal \
 - `boom_joint`: -83 ～ 48 degree
 - `arm_joint`: 32 ～ 155 degree
 - `bucket_joint`: -31 ～ 159 degree
+
+全関節の速度上限は100 degree/sです。
 
 ## Topic・timeout・符号・出力制限の変更
 
