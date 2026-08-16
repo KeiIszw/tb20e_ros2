@@ -30,6 +30,10 @@ def _double_parameter(name):
     return ParameterValue(LaunchConfiguration(name), value_type=float)
 
 
+def _boolean_parameter(name):
+    return ParameterValue(LaunchConfiguration(name), value_type=bool)
+
+
 def generate_launch_description():
     package_share = FindPackageShare("tb20e_control")
 
@@ -46,6 +50,35 @@ def generate_launch_description():
         DeclareLaunchArgument("deadzone", default_value="0.10"),
         DeclareLaunchArgument("joy_timeout_sec", default_value="0.25"),
         DeclareLaunchArgument("deadman_button", default_value="-1"),
+        DeclareLaunchArgument("command_output_enabled", default_value="true"),
+        DeclareLaunchArgument(
+            "unity_position_output_enabled", default_value="false"
+        ),
+        DeclareLaunchArgument("sim_feedback_timeout_sec", default_value="0.25"),
+        DeclareLaunchArgument(
+            "swing_sim_state_topic",
+            default_value="/sim/tb20e/current_swing_angle",
+        ),
+        DeclareLaunchArgument(
+            "boom_sim_state_topic",
+            default_value="/sim/tb20e/current_boom_angle",
+        ),
+        DeclareLaunchArgument(
+            "arm_sim_state_topic",
+            default_value="/sim/tb20e/current_arm_angle",
+        ),
+        DeclareLaunchArgument(
+            "bucket_sim_state_topic",
+            default_value="/sim/tb20e/current_bucket_angle",
+        ),
+        DeclareLaunchArgument("swing_unity_speed_deg_s", default_value="50.0"),
+        DeclareLaunchArgument("boom_unity_speed_deg_s", default_value="50.0"),
+        DeclareLaunchArgument("arm_unity_speed_deg_s", default_value="50.0"),
+        DeclareLaunchArgument("bucket_unity_speed_deg_s", default_value="50.0"),
+        DeclareLaunchArgument("swing_unity_position_sign", default_value="-1.0"),
+        DeclareLaunchArgument("boom_unity_position_sign", default_value="1.0"),
+        DeclareLaunchArgument("arm_unity_position_sign", default_value="1.0"),
+        DeclareLaunchArgument("bucket_unity_position_sign", default_value="1.0"),
     ]
 
     control = IncludeLaunchDescription(
@@ -56,6 +89,9 @@ def generate_launch_description():
         ),
         launch_arguments={
             "controller_name": "tb20e_gamepad_controller",
+            "command_output_enabled": LaunchConfiguration(
+                "command_output_enabled"
+            ),
         }.items(),
     )
 
@@ -88,6 +124,44 @@ def generate_launch_description():
             "joy_timeout_sec": _double_parameter("joy_timeout_sec"),
             "deadman_button": _integer_parameter("deadman_button"),
             "publish_rate": 20.0,
+            "unity_position_output_enabled": _boolean_parameter(
+                "unity_position_output_enabled"
+            ),
+            "sim_feedback_timeout_sec": _double_parameter(
+                "sim_feedback_timeout_sec"
+            ),
+            "swing_sim_state_topic": LaunchConfiguration(
+                "swing_sim_state_topic"
+            ),
+            "boom_sim_state_topic": LaunchConfiguration("boom_sim_state_topic"),
+            "arm_sim_state_topic": LaunchConfiguration("arm_sim_state_topic"),
+            "bucket_sim_state_topic": LaunchConfiguration(
+                "bucket_sim_state_topic"
+            ),
+            "swing_unity_speed_deg_s": _double_parameter(
+                "swing_unity_speed_deg_s"
+            ),
+            "boom_unity_speed_deg_s": _double_parameter(
+                "boom_unity_speed_deg_s"
+            ),
+            "arm_unity_speed_deg_s": _double_parameter(
+                "arm_unity_speed_deg_s"
+            ),
+            "bucket_unity_speed_deg_s": _double_parameter(
+                "bucket_unity_speed_deg_s"
+            ),
+            "swing_unity_position_sign": _double_parameter(
+                "swing_unity_position_sign"
+            ),
+            "boom_unity_position_sign": _double_parameter(
+                "boom_unity_position_sign"
+            ),
+            "arm_unity_position_sign": _double_parameter(
+                "arm_unity_position_sign"
+            ),
+            "bucket_unity_position_sign": _double_parameter(
+                "bucket_unity_position_sign"
+            ),
         }],
     )
 

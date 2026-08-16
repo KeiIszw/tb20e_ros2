@@ -73,6 +73,32 @@ std::string string_parameter(
   return parameter == info.hardware_parameters.end() ? default_value : parameter->second;
 }
 
+bool parse_bool_parameter(
+  const hardware_interface::HardwareInfo & info,
+  const std::string & key,
+  const bool default_value,
+  bool & result)
+{
+  const auto parameter = info.hardware_parameters.find(key);
+  if (parameter == info.hardware_parameters.end()) {
+    result = default_value;
+    return true;
+  }
+  if (parameter->second == "true" || parameter->second == "1") {
+    result = true;
+    return true;
+  }
+  if (parameter->second == "false" || parameter->second == "0") {
+    result = false;
+    return true;
+  }
+  RCLCPP_ERROR(
+    rclcpp::get_logger(kLoggerName),
+    "Hardware parameter '%s' must be true or false, got '%s'",
+    key.c_str(), parameter->second.c_str());
+  return false;
+}
+
 }  // namespace
 
 namespace tb20e_control
@@ -137,7 +163,8 @@ hardware_interface::CallbackReturn Tb20eLeverHardware::on_init(
 
   RCLCPP_INFO(
     node_->get_logger(),
-    "Initialized four-axis lever hardware (state timeout %.3f s)", state_timeout_sec_);
+    "Initialized four-axis lever hardware (state timeout %.3f s, output %s)",
+    state_timeout_sec_, command_output_enabled_ ? "enabled" : "disabled");
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -154,7 +181,7 @@ hardware_interface::CallbackReturn Tb20eLeverHardware::on_configure(
     return hardware_interface::CallbackReturn::ERROR;
   }
 
-  RCLCPP_INFO(node_->get_logger(), "Configured and listening for Unity angle feedback");
+  RCLCPP_INFO(node_->get_logger(), "Configured and listening for angle feedback");
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -372,7 +399,9 @@ hardware_interface::return_type Tb20eLeverHardware::write(
   for (std::size_t axis = 0; axis < kAxisCount; ++axis) {
     double lever_command = 0.0;
     const double controller_command = effort_commands_[axis];
-    if (output_enabled && !feedback_fault_latched_.load()) {
+    if (output_enabled && command_output_enabled_ &&
+      !feedback_fault_latched_.load())
+    {
       const auto & config = axis_configs_[axis];
       bool moves_outside_end_stop = false;
       if (!config.continuous) {
@@ -430,6 +459,12 @@ hardware_interface::return_type Tb20eLeverHardware::write(
 
 bool Tb20eLeverHardware::load_hardware_parameters()
 {
+  if (!parse_bool_parameter(
+      info_, "command_output_enabled", true, command_output_enabled_))
+  {
+    return false;
+  }
+
   if (!parse_finite_double(info_, "state_timeout_sec", 0.1, state_timeout_sec_) ||
     state_timeout_sec_ <= 0.0)
   {

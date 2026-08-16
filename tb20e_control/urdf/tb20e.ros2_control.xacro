@@ -17,6 +17,7 @@
         <param name="initial_feedback_wait_sec">$(arg initial_feedback_wait_sec)</param>
         <param name="feedback_limit_tolerance_deg">$(arg feedback_limit_tolerance_deg)</param>
         <param name="max_feedback_velocity_deg_s">$(arg max_feedback_velocity_deg_s)</param>
+        <param name="command_output_enabled">$(arg command_output_enabled)</param>
 
         <param name="swing_state_topic">$(arg swing_state_topic)</param>
         <param name="swing_command_topic">$(arg swing_command_topic)</param>

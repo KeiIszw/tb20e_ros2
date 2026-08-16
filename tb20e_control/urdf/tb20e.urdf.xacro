@@ -6,6 +6,7 @@
   <xacro:arg name="initial_feedback_wait_sec" default="2.0"/>
   <xacro:arg name="feedback_limit_tolerance_deg" default="2.0"/>
   <xacro:arg name="max_feedback_velocity_deg_s" default="180.0"/>
+  <xacro:arg name="command_output_enabled" default="true"/>
 
   <xacro:property name="boom_position_min_deg" value="-83.0"/>
   <xacro:property name="boom_position_max_deg" value="48.0"/>

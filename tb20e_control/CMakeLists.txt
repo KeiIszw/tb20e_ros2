@@ -90,6 +90,14 @@ if(BUILD_TESTING)
   target_include_directories(test_gamepad_mapping PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
+
+  ament_add_gtest(test_position_command
+    test/test_position_command.cpp
+  )
+  target_compile_features(test_position_command PUBLIC cxx_std_17)
+  target_include_directories(test_position_command PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+  )
 endif()
 
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)

@@ -130,6 +130,7 @@ private:
   double initial_feedback_wait_sec_{2.0};
   double feedback_limit_tolerance_rad_{0.03490658503988659};
   double max_feedback_velocity_rad_s_{3.14159265358979323846};
+  bool command_output_enabled_{true};
 
   std::mutex feedback_mutex_;
   std::condition_variable feedback_condition_;
