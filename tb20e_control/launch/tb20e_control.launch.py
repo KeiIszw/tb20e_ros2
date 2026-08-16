@@ -14,7 +14,9 @@
 # limitations under the License.
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, EmitEvent, RegisterEventHandler
+from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -61,6 +63,7 @@ def generate_launch_description():
 
     declared_arguments = [
         DeclareLaunchArgument("use_sim_time", default_value="false"),
+        DeclareLaunchArgument("controller_name", default_value="tb20e_controller"),
         DeclareLaunchArgument(
             "controllers_file", default_value=default_controllers_file
         ),
@@ -115,11 +118,11 @@ def generate_launch_description():
         output="screen",
     )
 
-    trajectory_controller = Node(
+    selected_controller = Node(
         package="controller_manager",
         executable="spawner",
         arguments=[
-            "tb20e_controller",
+            LaunchConfiguration("controller_name"),
             "--controller-manager",
             "/controller_manager",
             "--controller-manager-timeout",
@@ -128,12 +131,26 @@ def generate_launch_description():
         output="screen",
     )
 
+    shutdown_on_control_exit = RegisterEventHandler(
+        OnProcessExit(
+            target_action=control_node,
+            on_exit=[
+                EmitEvent(
+                    event=Shutdown(
+                        reason="ros2_control_node exited; stopping bringup"
+                    )
+                )
+            ],
+        )
+    )
+
     return LaunchDescription(
         declared_arguments
         + [
             robot_state_publisher,
+            shutdown_on_control_exit,
             control_node,
             joint_state_broadcaster,
-            trajectory_controller,
+            selected_controller,
         ]
     )

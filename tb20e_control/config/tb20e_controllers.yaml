@@ -12,6 +12,18 @@ controller_manager:
     tb20e_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
+    tb20e_gamepad_controller:
+      type: forward_command_controller/ForwardCommandController
+
+tb20e_gamepad_controller:
+  ros__parameters:
+    joints:
+      - swing_joint
+      - boom_joint
+      - arm_joint
+      - bucket_joint
+    interface_name: effort
+
 tb20e_controller:
   ros__parameters:
     joints:

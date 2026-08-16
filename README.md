@@ -97,6 +97,54 @@ ros2 action send_goal \
 
 全関節の速度上限は100 degree/sです。
 
+## USBゲームパッドでの操作
+
+Linuxでゲームパッドが `/dev/input/js0` として認識され、Unityから4軸の角度feedbackが
+届いている状態で、軌道制御用launchの代わりに次を起動します。
+
+```bash
+ros2 launch tb20e_control tb20e_gamepad.launch.py
+```
+
+既定の割り当てはSDL GameControllerの標準axis配列に合わせています。
+
+| 入力 | 操作軸 | Joy axis | 出力範囲 |
+|---|---|---:|---:|
+| 左スティック 左右 | swing | 0 | -100 ～ 100 |
+| 左スティック 上下（反転） | arm | 1 | -100 ～ 100 |
+| 右スティック 左右 | bucket | 2 | -100 ～ 100 |
+| 右スティック 上下 | boom | 3 | -100 ～ 100 |
+
+スティック中央には既定で `0.10` のデッドゾーンを設けています。Joy入力が0.25秒以上
+途絶えた場合やaxis数が不足する場合は、4軸すべてを自動的にゼロへ戻します。
+
+ゲームパッドによってaxis番号や向きが異なる場合は、まず入力を確認します。
+
+```bash
+ros2 topic echo /joy
+```
+
+起動引数でaxis番号、方向、最大操作率を変更できます。scaleの符号で方向を指定します。
+実機に合わせてarmの既定値だけ `-100.0`、その他は `100.0` です。次の例はarmを
+既定と逆向きに戻し、boomを反転します。
+
+```bash
+ros2 launch tb20e_control tb20e_gamepad.launch.py \
+  swing_axis:=0 arm_axis:=1 bucket_axis:=2 boom_axis:=3 \
+  swing_scale:=100.0 arm_scale:=100.0 \
+  bucket_scale:=100.0 boom_scale:=-100.0
+```
+
+特定ボタンを押している間だけ操作を許可するには、Joy messageのbutton番号を指定します。
+既定値 `-1` ではボタン操作を要求しません。
+
+```bash
+ros2 launch tb20e_control tb20e_gamepad.launch.py deadman_button:=4
+```
+
+`tb20e_control.launch.py` と `tb20e_gamepad.launch.py` は同時に起動しないでください。
+どちらも同じ4本のeffort command interfaceを使用します。
+
 ## Topic・timeout・符号・出力制限の変更
 
 すべての通信設定は
