@@ -183,6 +183,7 @@ Unity feedbackが欠落または古くなった場合、位置積分とUnity向�
 | `initial_feedback_wait_sec` | `2.0` | activate時に4軸feedbackを待つ時間 [s] |
 | `feedback_limit_tolerance_deg` | `2.0` | 関節範囲外feedbackの許容差 [degree] |
 | `max_feedback_velocity_deg_s` | `180.0` | 角度飛び判定の上限 [degree/s] |
+| `feedback_velocity_jitter_tolerance_sec` | `0.03` | 速度判定で許容する受信時刻の揺らぎ [s]。`0`で厳密なサンプル間判定 |
 
 ### 軸ごと
 
@@ -248,3 +249,15 @@ software timeout、clamp、`command_output_enabled`は独立安全機構の代�
 ## License
 
 Apache License 2.0。詳細は[../LICENSE](../LICENSE)を参照してください。
+
+### Unityの角度フィードバックと受信揺らぎ
+
+`Float64`には送信時刻がないため、速度判定にはsteady clockの受信間隔を使用します。
+Unity / TCP経由でメッセージがまとめて届く場合に備え、各サンプルの絶対角度変化から
+`上限速度 × 受信間隔`を引いた超過量を累積し、負になった場合は0に戻します。
+超過量が`上限速度 × feedback_velocity_jitter_tolerance_sec`を超えると停止します。
+既定値では180 deg/sに対して5.4度の受信揺らぎを許容します。
+継続的な超過や大きなジャンプは検出しますが、短い速度超過の検出には遅延が加わります
+（例: 240 deg/sの連続運動は約90 msの超過蓄積後、次の観測で検出）。
+角度範囲外・非有限値・受信タイムアウトの停止条件はそのままです。
+トピック名の変更は不要です。実機とUnityが同じトピックへ同時にpublishしない構成で検証してください。

@@ -16,6 +16,7 @@
 
 #include "gtest/gtest.h"
 #include "tb20e_control/math_utils.hpp"
+#include "tb20e_control/feedback_velocity.hpp"
 
 namespace
 {
@@ -94,3 +95,110 @@ TEST(MathUtils, DetectsImplausibleFeedbackVelocity)
 }
 
 }  // namespace
+
+TEST(FeedbackVelocity, FirstReadUsesSampleIntervalInsteadOfTinyControllerPeriod)
+{
+  tb20e_control::FeedbackVelocity estimator;
+  const auto t = std::chrono::steady_clock::time_point{};
+  estimator.reset(0.0, t);
+  // 0.2 degrees in 5 ms = 40 deg/s; a first-loop 1 us period would falsely trip.
+  EXPECT_FALSE(
+    estimator.update(
+      degrees_to_radians(0.2), t + std::chrono::milliseconds(5), false,
+      degrees_to_radians(180.0)));
+  EXPECT_NEAR(estimator.velocity(), degrees_to_radians(40.0), 1e-12);
+  EXPECT_FALSE(
+    estimator.update(
+      degrees_to_radians(0.2), t + std::chrono::milliseconds(5), false,
+      degrees_to_radians(180.0)));
+  EXPECT_NEAR(estimator.velocity(), degrees_to_radians(40.0), 1e-12);
+}
+
+TEST(FeedbackVelocity, RealOverspeedStillTripsAndReactivationResetsBaseline)
+{
+  tb20e_control::FeedbackVelocity estimator;
+  const auto t = std::chrono::steady_clock::time_point{};
+  estimator.reset(0.0, t);
+  EXPECT_TRUE(
+    estimator.update(
+      degrees_to_radians(20.0), t + std::chrono::milliseconds(50), false,
+      degrees_to_radians(180.0)));
+  EXPECT_DOUBLE_EQ(estimator.velocity(), 0.0);
+  estimator.reset(degrees_to_radians(90.0), t + std::chrono::seconds(1));
+  EXPECT_FALSE(
+    estimator.update(
+      degrees_to_radians(90.2), t + std::chrono::milliseconds(1005), false,
+      degrees_to_radians(180.0)));
+  EXPECT_NEAR(estimator.velocity(), degrees_to_radians(40.0), 1e-10);
+}
+
+TEST(FeedbackVelocity, SwingWrapUsesShortestDistance)
+{
+  tb20e_control::FeedbackVelocity estimator;
+  const auto t = std::chrono::steady_clock::time_point{};
+  estimator.reset(degrees_to_radians(179.0), t);
+  EXPECT_FALSE(
+    estimator.update(
+      degrees_to_radians(-179.0), t + std::chrono::milliseconds(50), true,
+      degrees_to_radians(180.0)));
+  EXPECT_NEAR(estimator.velocity(), degrees_to_radians(40.0), 1e-10);
+}
+
+TEST(FeedbackVelocity, CompressedUnityDeliveryDoesNotTrip)
+{
+  tb20e_control::FeedbackVelocity estimator;
+  const auto t = std::chrono::steady_clock::time_point{};
+  estimator.reset(0.0, t);
+  // 100 deg/s source, delivered at alternating 39 ms / 1 ms intervals.
+  for (int i = 1; i <= 100; ++i) {
+    const int receipt_ms = i * 20 + (i % 2 ? 19 : 0);
+    EXPECT_FALSE(
+      estimator.update(
+        degrees_to_radians(i * 2.0), t + std::chrono::milliseconds(receipt_ms),
+        false, degrees_to_radians(180.0)));
+  }
+}
+
+TEST(FeedbackVelocity, SustainedOverspeedAccumulatesEvenWithReversals)
+{
+  for (const bool reverse : {false, true}) {
+    tb20e_control::FeedbackVelocity estimator;
+    const auto t = std::chrono::steady_clock::time_point{};
+    estimator.reset(0.0, t);
+    // 240 deg/s exceeds the 5.4 degree jitter budget after five 20 ms samples.
+    for (int i = 1; i <= 5; ++i) {
+      const double position = reverse ? (i % 2) * 4.8 : i * 4.8;
+      EXPECT_EQ(
+        estimator.update(
+          degrees_to_radians(position), t + std::chrono::milliseconds(i * 20),
+          false, degrees_to_radians(180.0)), i == 5);
+    }
+  }
+}
+
+TEST(FeedbackVelocity, ZeroTolerancePreservesStrictCheckAndOldStampsFault)
+{
+  tb20e_control::FeedbackVelocity estimator;
+  const auto t = std::chrono::steady_clock::time_point{};
+  estimator.reset(0.0, t);
+  EXPECT_TRUE(
+    estimator.update(
+      degrees_to_radians(2.0), t + std::chrono::milliseconds(1), false,
+      degrees_to_radians(180.0), 0.0));
+  EXPECT_TRUE(estimator.update(0.0, t, false, degrees_to_radians(180.0)));
+}
+
+TEST(FeedbackVelocity, IdleTimeDoesNotBankCreditForLaterJump)
+{
+  tb20e_control::FeedbackVelocity estimator;
+  const auto t = std::chrono::steady_clock::time_point{};
+  estimator.reset(0.0, t);
+  EXPECT_FALSE(
+    estimator.update(
+      0.0, t + std::chrono::seconds(10), false,
+      degrees_to_radians(180.0)));
+  EXPECT_TRUE(
+    estimator.update(
+      degrees_to_radians(10.0), t + std::chrono::milliseconds(10001), false,
+      degrees_to_radians(180.0)));
+}

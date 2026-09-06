@@ -29,6 +29,7 @@ XACRO_ARGUMENT_DEFAULTS = {
     "initial_feedback_wait_sec": "2.0",
     "feedback_limit_tolerance_deg": "2.0",
     "max_feedback_velocity_deg_s": "180.0",
+    "feedback_velocity_jitter_tolerance_sec": "0.03",
     "command_output_enabled": "true",
     "swing_state_topic": "/current_swing_angle",
     "swing_command_topic": "/manipulated_swing_lever",

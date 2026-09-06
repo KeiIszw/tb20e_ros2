@@ -46,22 +46,22 @@ tb20e_controller:
     # not validated gains for a physical excavator.
     gains:
       swing_joint:
-        p: 30.0
+        p: 2000.0
         i: 0.0
-        d: 2.0
+        d: 0.0
         angle_wraparound: true
       boom_joint:
-        p: 40.0
+        p: 2000.0
         i: 0.0
-        d: 3.0
+        d: 0.0
       arm_joint:
-        p: 35.0
+        p: 2000.0
         i: 0.0
-        d: 3.0
+        d: 0.0
       bucket_joint:
-        p: 30.0
+        p: 2000.0
         i: 0.0
-        d: 2.5
+        d: 0.0
 
     constraints:
       goal_time: 30.0

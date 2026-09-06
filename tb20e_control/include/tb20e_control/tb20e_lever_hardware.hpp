@@ -26,6 +26,7 @@
 #include <thread>
 #include <vector>
 
+#include "tb20e_control/feedback_velocity.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
@@ -120,6 +121,7 @@ private:
 
   std::array<AxisConfig, kAxisCount> axis_configs_{};
   std::array<FeedbackSample, kAxisCount> feedback_{};
+  std::array<FeedbackVelocity, kAxisCount> feedback_velocity_{};
   std::array<double, kAxisCount> position_states_{};
   std::array<double, kAxisCount> velocity_states_{};
   std::array<double, kAxisCount> effort_commands_{};
@@ -130,6 +132,7 @@ private:
   double initial_feedback_wait_sec_{2.0};
   double feedback_limit_tolerance_rad_{0.03490658503988659};
   double max_feedback_velocity_rad_s_{3.14159265358979323846};
+  double feedback_velocity_jitter_tolerance_sec_{0.03};
   bool command_output_enabled_{true};
 
   std::mutex feedback_mutex_;

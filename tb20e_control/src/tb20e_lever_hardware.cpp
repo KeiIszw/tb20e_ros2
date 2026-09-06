@@ -302,13 +302,10 @@ Tb20eLeverHardware::export_command_interfaces()
 }
 
 hardware_interface::return_type Tb20eLeverHardware::read(
-  const rclcpp::Time &, const rclcpp::Duration & period)
+  const rclcpp::Time &, const rclcpp::Duration &)
 {
   const auto now = std::chrono::steady_clock::now();
-  const double period_sec = period.seconds();
-  const bool calculate_velocity =
-    active_.load() && std::isfinite(period_sec) &&
-    period_sec > std::numeric_limits<double>::epsilon();
+  const bool calculate_velocity = active_.load();
   std::array<bool, kAxisCount> velocity_fault{};
 
   {
@@ -319,23 +316,16 @@ hardware_interface::return_type Tb20eLeverHardware::read(
         continue;
       }
 
-      const double previous_position = position_states_[axis];
       const double current_position = feedback_[axis].position_rad;
       position_states_[axis] = current_position;
       velocity_states_[axis] = 0.0;
 
       if (calculate_velocity && feedback_is_fresh(feedback_[axis], now)) {
-        const double position_delta = axis_configs_[axis].continuous ?
-          math::shortest_angular_delta(current_position, previous_position) :
-          current_position - previous_position;
-        const double velocity = position_delta / period_sec;
-        if (!math::velocity_exceeds_limit(
-            position_delta, period_sec, max_feedback_velocity_rad_s_))
-        {
-          velocity_states_[axis] = velocity;
-        } else {
-          velocity_fault[axis] = true;
-        }
+        velocity_fault[axis] = feedback_velocity_[axis].update(
+          current_position, feedback_[axis].received_at,
+          axis_configs_[axis].continuous, max_feedback_velocity_rad_s_,
+          feedback_velocity_jitter_tolerance_sec_);
+        velocity_states_[axis] = feedback_velocity_[axis].velocity();
       }
     }
   }
@@ -349,9 +339,11 @@ hardware_interface::return_type Tb20eLeverHardware::read(
       if (velocity_fault[axis]) {
         RCLCPP_ERROR(
           node_->get_logger(),
-          "%s feedback changed faster than the configured %.3f deg/s limit",
+          "%s feedback changed faster than the configured %.3f deg/s limit "
+          "with %.3f s receipt jitter allowance",
           axis_configs_[axis].name.c_str(),
-          max_feedback_velocity_rad_s_ / math::kDegreesToRadians);
+          max_feedback_velocity_rad_s_ / math::kDegreesToRadians,
+          feedback_velocity_jitter_tolerance_sec_);
       }
     }
     latch_fault_and_publish_zero();
@@ -497,6 +489,17 @@ bool Tb20eLeverHardware::load_hardware_parameters()
   }
   feedback_limit_tolerance_rad_ =
     math::degrees_to_radians(feedback_limit_tolerance_deg);
+
+  if (!parse_finite_double(
+      info_, "feedback_velocity_jitter_tolerance_sec", 0.03,
+      feedback_velocity_jitter_tolerance_sec_) ||
+    feedback_velocity_jitter_tolerance_sec_ < 0.0)
+  {
+    RCLCPP_ERROR(
+      rclcpp::get_logger(kLoggerName),
+      "Hardware parameter 'feedback_velocity_jitter_tolerance_sec' must not be negative");
+    return false;
+  }
 
   double max_feedback_velocity_deg_s = 180.0;
   if (!parse_finite_double(
@@ -715,6 +718,7 @@ void Tb20eLeverHardware::copy_feedback_to_states_locked()
       continue;
     }
     position_states_[axis] = feedback_[axis].position_rad;
+    feedback_velocity_[axis].reset(feedback_[axis].position_rad, feedback_[axis].received_at);
     velocity_states_[axis] = 0.0;
   }
 }
@@ -766,6 +770,7 @@ void Tb20eLeverHardware::reset_feedback()
   {
     std::lock_guard<std::mutex> lock(feedback_mutex_);
     feedback_.fill(FeedbackSample{});
+    feedback_velocity_.fill(FeedbackVelocity{});
     position_states_.fill(0.0);
     velocity_states_.fill(0.0);
   }
