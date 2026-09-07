@@ -137,7 +137,3 @@ Dockerではこれらも`docker compose exec ros2 bash -ic '<コマンド>'`で�
 
 詳細な起動モード、Unity単独運用、topic切替、トラブルシュートは
 [`tb20e_bringup/README.md`](tb20e_bringup/README.md)を参照してください。
-
-## License
-
-Apache License 2.0。詳細は[LICENSE](LICENSE)を参照してください。
