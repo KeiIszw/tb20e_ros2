@@ -152,7 +152,7 @@ def generate_launch_description():
     http_control = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
-                [control_share, "launch", "tb20e_control.launch.py"]
+                [control_share, "launch", "tb20e_control_0.launch.py"]
             )
         ),
         launch_arguments=http_control_arguments.items(),

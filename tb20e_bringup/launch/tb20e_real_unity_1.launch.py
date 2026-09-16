@@ -50,11 +50,11 @@ def generate_launch_description():
         DeclareLaunchArgument("joy_device_id", default_value="0"),
         DeclareLaunchArgument("deadman_button", default_value="-1"),
         DeclareLaunchArgument("http_host", default_value="0.0.0.0"),
-        DeclareLaunchArgument("http_port", default_value="8899"),
-        DeclareLaunchArgument("swing_state_topic", default_value="/TB20e_0/current_swing_angle"),
-        DeclareLaunchArgument("boom_state_topic", default_value="/TB20e_0/current_boom_angle"),
-        DeclareLaunchArgument("arm_state_topic", default_value="/TB20e_0/current_arm_angle"),
-        DeclareLaunchArgument("bucket_state_topic", default_value="/TB20e_0/current_bucket_angle"),
+        DeclareLaunchArgument("http_port", default_value="8890"),
+        DeclareLaunchArgument("swing_state_topic", default_value="/TB20e_1/current_swing_angle"),
+        DeclareLaunchArgument("boom_state_topic", default_value="/TB20e_1/current_boom_angle"),
+        DeclareLaunchArgument("arm_state_topic", default_value="/TB20e_1/current_arm_angle"),
+        DeclareLaunchArgument("bucket_state_topic", default_value="/TB20e_1/current_bucket_angle"),
         DeclareLaunchArgument(
             "swing_sim_state_topic",
             default_value="/sim/tb20e/current_swing_angle",
@@ -152,7 +152,7 @@ def generate_launch_description():
     http_control = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
-                [control_share, "launch", "tb20e_control.launch.py"]
+                [control_share, "launch", "tb20e_control_1.launch.py"]
             )
         ),
         launch_arguments=http_control_arguments.items(),
