@@ -1,3 +1,5 @@
+# Copyright 2026 tb20e_bringup contributors
+# SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.8)
 project(tb20e_bringup)

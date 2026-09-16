@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
+<!-- Copyright 2026 tb20e_ros2 contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro
     name="tb20e_ros2_control"

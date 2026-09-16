@@ -246,6 +246,10 @@ colcon test-result --verbose
 通信watchdog、速度・圧力・作業範囲制限、起動時のneutral確認を用意してください。
 software timeout、clamp、`command_output_enabled`は独立安全機構の代わりにはなりません。
 
+## License
+
+Apache License 2.0。詳細は[../LICENSE](../LICENSE)を参照してください。
+
 ### Unityの角度フィードバックと受信揺らぎ
 
 `Float64`には送信時刻がないため、速度判定にはsteady clockの受信間隔を使用します。

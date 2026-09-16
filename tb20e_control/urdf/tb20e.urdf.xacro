@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
+<!-- Copyright 2026 tb20e_ros2 contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="tb20e">
   <xacro:arg name="state_timeout_sec" default="0.10"/>
   <xacro:arg name="initial_feedback_wait_sec" default="2.0"/>
