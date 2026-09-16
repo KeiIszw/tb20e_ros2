@@ -87,7 +87,8 @@ ros2 action send_goal \
   "{trajectory: {joint_names: [swing_joint, boom_joint, arm_joint, bucket_joint], points: [{positions: [0.0, -0.35, 1.40, 0.52], time_from_start: {sec: 5}}]}}"
 ```
 
-PIDゲインは`config/tb20e_controllers.yaml`にあります。現在の値は初期調整値であり、
+PIDゲインは`config/tb20e_controllers_0.yaml`（0号機）と
+`config/tb20e_controllers_1.yaml`（1号機）にあります。現在の値は初期調整値であり、
 実機で同定された値ではありません。
 
 ## USBゲームパッドを起動する

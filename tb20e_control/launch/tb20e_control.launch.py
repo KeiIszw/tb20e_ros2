@@ -60,11 +60,12 @@ def generate_launch_description():
         [package_share, "urdf", "tb20e.urdf.xacro"]
     )
     default_controllers_file = PathJoinSubstitution(
-        [package_share, "config", "tb20e_controllers.yaml"]
+        [package_share, "config", "tb20e_controllers_0.yaml"]
     )
 
     declared_arguments = [
         DeclareLaunchArgument("use_sim_time", default_value="false"),
+        DeclareLaunchArgument("frame_prefix", default_value=""),
         DeclareLaunchArgument("controller_name", default_value="tb20e_controller"),
         DeclareLaunchArgument(
             "controllers_file", default_value=default_controllers_file
@@ -93,7 +94,12 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="screen",
-        parameters=[robot_description, {"use_sim_time": use_sim_time}],
+        parameters=[robot_description, {
+            "use_sim_time": use_sim_time,
+            "frame_prefix": ParameterValue(
+                LaunchConfiguration("frame_prefix"), value_type=str
+            ),
+        }],
     )
 
     control_node = Node(
@@ -113,7 +119,7 @@ def generate_launch_description():
         arguments=[
             "joint_state_broadcaster",
             "--controller-manager",
-            "/controller_manager",
+            "controller_manager",
             "--controller-manager-timeout",
             "120",
         ],
@@ -126,7 +132,7 @@ def generate_launch_description():
         arguments=[
             LaunchConfiguration("controller_name"),
             "--controller-manager",
-            "/controller_manager",
+            "controller_manager",
             "--controller-manager-timeout",
             "120",
         ],

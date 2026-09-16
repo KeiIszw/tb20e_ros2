@@ -14,7 +14,7 @@
 # limitations under the License.
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
@@ -22,6 +22,7 @@ from launch.substitutions import (
     PathJoinSubstitution,
     PythonExpression,
 )
+from launch_ros.actions import PushRosNamespace, SetRemap
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -34,10 +35,18 @@ def _is_source(name):
 
 
 def generate_launch_description():
+    robot_namespace = LaunchConfiguration("ns")
     control_share = FindPackageShare("tb20e_control")
     scratch_share = FindPackageShare("scratch_hci_bridge")
 
     arguments = [
+        DeclareLaunchArgument("ns", default_value="TB20e_0"),
+        DeclareLaunchArgument(
+            "controllers_file",
+            default_value=PathJoinSubstitution(
+                [control_share, "config", "tb20e_controllers_0.yaml"]
+            ),
+        ),
         DeclareLaunchArgument(
             "input_source",
             default_value="gamepad",
@@ -51,25 +60,25 @@ def generate_launch_description():
         DeclareLaunchArgument("deadman_button", default_value="-1"),
         DeclareLaunchArgument("http_host", default_value="0.0.0.0"),
         DeclareLaunchArgument("http_port", default_value="8899"),
-        DeclareLaunchArgument("swing_state_topic", default_value="/TB20e_0/current_swing_angle"),
-        DeclareLaunchArgument("boom_state_topic", default_value="/TB20e_0/current_boom_angle"),
-        DeclareLaunchArgument("arm_state_topic", default_value="/TB20e_0/current_arm_angle"),
-        DeclareLaunchArgument("bucket_state_topic", default_value="/TB20e_0/current_bucket_angle"),
+        DeclareLaunchArgument("swing_state_topic", default_value=["/", robot_namespace, "/current_swing_angle"]),
+        DeclareLaunchArgument("boom_state_topic", default_value=["/", robot_namespace, "/current_boom_angle"]),
+        DeclareLaunchArgument("arm_state_topic", default_value=["/", robot_namespace, "/current_arm_angle"]),
+        DeclareLaunchArgument("bucket_state_topic", default_value=["/", robot_namespace, "/current_bucket_angle"]),
         DeclareLaunchArgument(
             "swing_sim_state_topic",
-            default_value="/sim/tb20e/current_swing_angle",
+            default_value=["/sim/", robot_namespace, "/current_swing_angle"],
         ),
         DeclareLaunchArgument(
             "boom_sim_state_topic",
-            default_value="/sim/tb20e/current_boom_angle",
+            default_value=["/sim/", robot_namespace, "/current_boom_angle"],
         ),
         DeclareLaunchArgument(
             "arm_sim_state_topic",
-            default_value="/sim/tb20e/current_arm_angle",
+            default_value=["/sim/", robot_namespace, "/current_arm_angle"],
         ),
         DeclareLaunchArgument(
             "bucket_sim_state_topic",
-            default_value="/sim/tb20e/current_bucket_angle",
+            default_value=["/sim/", robot_namespace, "/current_bucket_angle"],
         ),
         DeclareLaunchArgument("sim_feedback_timeout_sec", default_value="0.25"),
         DeclareLaunchArgument("swing_unity_speed_deg_s", default_value="50.0"),
@@ -83,6 +92,7 @@ def generate_launch_description():
     ]
 
     common_hardware_arguments = {
+        "controllers_file": LaunchConfiguration("controllers_file"),
         "use_sim_time": LaunchConfiguration("use_sim_time"),
         "command_output_enabled": LaunchConfiguration("real_output_enabled"),
         "swing_state_topic": LaunchConfiguration("swing_state_topic"),
@@ -90,6 +100,14 @@ def generate_launch_description():
         "arm_state_topic": LaunchConfiguration("arm_state_topic"),
         "bucket_state_topic": LaunchConfiguration("bucket_state_topic"),
     }
+
+    # The gamepad include uses the common control launch; explicitly select
+    # this robot's actuator topics as well as its feedback topics.
+    common_hardware_arguments["frame_prefix"] = [robot_namespace, "/"]
+    for axis in ("swing", "boom", "arm", "bucket"):
+        common_hardware_arguments[f"{axis}_command_topic"] = (
+            ["/", robot_namespace, f"/manipulated_{axis}_lever"]
+        )
 
     gamepad_arguments = dict(common_hardware_arguments)
     gamepad_arguments.update(
@@ -171,7 +189,12 @@ def generate_launch_description():
             "unity_position_output_enabled": LaunchConfiguration(
                 "unity_position_output_enabled"
             ),
-            "unity_position_command_prefix": "/tb20e",
+            "excavator": robot_namespace,
+            "trajectory_action": (
+                ["/", robot_namespace, "/tb20e_controller/follow_joint_trajectory"]
+            ),
+            "joint_state_topic": ["/", robot_namespace, "/joint_states"],
+            "unity_position_command_prefix": ["/", robot_namespace],
             "swing_unity_position_sign": LaunchConfiguration(
                 "swing_unity_position_sign"
             ),
@@ -188,6 +211,24 @@ def generate_launch_description():
         condition=_is_source("http"),
     )
 
-    return LaunchDescription(
-        arguments + [gamepad, http_control, http_bridge]
+    # The gamepad node uses absolute names; scope these explicitly too.
+    remappings = [
+        SetRemap(src="/joy", dst=["/", robot_namespace, "/joy"]),
+        SetRemap(
+            src="/tb20e_gamepad_controller/commands",
+            dst=["/", robot_namespace, "/tb20e_gamepad_controller/commands"],
+        ),
+    ]
+    remappings.extend(
+        SetRemap(src=f"/tb20e/{axis}/cmd", dst=["/", robot_namespace, f"/{axis}/cmd"])
+        for axis in ("swing", "boom", "arm", "bucket")
     )
+    return LaunchDescription(arguments + [
+        GroupAction([
+            PushRosNamespace(robot_namespace),
+            *remappings,
+            gamepad,
+            http_control,
+            http_bridge,
+        ]),
+    ])
