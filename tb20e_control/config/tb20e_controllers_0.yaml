@@ -47,22 +47,22 @@
     # not validated gains for a physical excavator.
     gains:
       swing_joint:
-        p: 2000.0
+        p: 100.0
         i: 0.0
         d: 0.0
         angle_wraparound: true
       boom_joint:
-        p: 2000.0
+        p: 100.0
         i: 0.0
         d: 0.0
       arm_joint:
-        p: 2000.0
+        p: 100.0
         i: 0.0
         d: 0.0
       bucket_joint:
-        p: 2000.0
-        i: 0.0
-        d: 0.0
+        p: 500.0
+        i: 3.0
+        d: 2.0
 
     constraints:
       goal_time: 30.0
@@ -75,3 +75,25 @@
         goal: 0.04
       bucket_joint:
         goal: 0.04
+
+# Hardware lever compensation, read by the control launch from this same file.
+# Positive/negative refer to the published lever sign; enter positive magnitudes.
+# 0 disables compensation in that direction. Changes take effect after restart.
+/**/tb20e_lever_hardware:
+  ros__parameters:
+    swing_lever_positive_min: 0.0
+    swing_lever_negative_min: 0.0
+    swing_lever_start: 2.0
+    swing_lever_stop: 1.0
+    boom_lever_positive_min: 0.0
+    boom_lever_negative_min: 0.0
+    boom_lever_start: 2.0
+    boom_lever_stop: 1.0
+    arm_lever_positive_min: 0.0
+    arm_lever_negative_min: 0.0
+    arm_lever_start: 2.0
+    arm_lever_stop: 1.0
+    bucket_lever_positive_min: 45.0
+    bucket_lever_negative_min: 38.0
+    bucket_lever_start: 2.0
+    bucket_lever_stop: 1.0

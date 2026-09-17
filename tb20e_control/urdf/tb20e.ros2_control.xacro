@@ -25,12 +25,20 @@
         <param name="swing_lever_sign">$(arg swing_lever_sign)</param>
         <param name="swing_lever_min">$(arg swing_lever_min)</param>
         <param name="swing_lever_max">$(arg swing_lever_max)</param>
+        <param name="swing_lever_positive_min">$(arg swing_lever_positive_min)</param>
+        <param name="swing_lever_negative_min">$(arg swing_lever_negative_min)</param>
+        <param name="swing_lever_start">$(arg swing_lever_start)</param>
+        <param name="swing_lever_stop">$(arg swing_lever_stop)</param>
 
         <param name="boom_state_topic">$(arg boom_state_topic)</param>
         <param name="boom_command_topic">$(arg boom_command_topic)</param>
         <param name="boom_lever_sign">$(arg boom_lever_sign)</param>
         <param name="boom_lever_min">$(arg boom_lever_min)</param>
         <param name="boom_lever_max">$(arg boom_lever_max)</param>
+        <param name="boom_lever_positive_min">$(arg boom_lever_positive_min)</param>
+        <param name="boom_lever_negative_min">$(arg boom_lever_negative_min)</param>
+        <param name="boom_lever_start">$(arg boom_lever_start)</param>
+        <param name="boom_lever_stop">$(arg boom_lever_stop)</param>
         <param name="boom_position_min_deg">${boom_position_min_deg}</param>
         <param name="boom_position_max_deg">${boom_position_max_deg}</param>
 
@@ -39,6 +47,10 @@
         <param name="arm_lever_sign">$(arg arm_lever_sign)</param>
         <param name="arm_lever_min">$(arg arm_lever_min)</param>
         <param name="arm_lever_max">$(arg arm_lever_max)</param>
+        <param name="arm_lever_positive_min">$(arg arm_lever_positive_min)</param>
+        <param name="arm_lever_negative_min">$(arg arm_lever_negative_min)</param>
+        <param name="arm_lever_start">$(arg arm_lever_start)</param>
+        <param name="arm_lever_stop">$(arg arm_lever_stop)</param>
         <param name="arm_position_min_deg">${arm_position_min_deg}</param>
         <param name="arm_position_max_deg">${arm_position_max_deg}</param>
 
@@ -47,6 +59,10 @@
         <param name="bucket_lever_sign">$(arg bucket_lever_sign)</param>
         <param name="bucket_lever_min">$(arg bucket_lever_min)</param>
         <param name="bucket_lever_max">$(arg bucket_lever_max)</param>
+        <param name="bucket_lever_positive_min">$(arg bucket_lever_positive_min)</param>
+        <param name="bucket_lever_negative_min">$(arg bucket_lever_negative_min)</param>
+        <param name="bucket_lever_start">$(arg bucket_lever_start)</param>
+        <param name="bucket_lever_stop">$(arg bucket_lever_stop)</param>
         <param name="bucket_position_min_deg">${bucket_position_min_deg}</param>
         <param name="bucket_position_max_deg">${bucket_position_max_deg}</param>
       </hardware>

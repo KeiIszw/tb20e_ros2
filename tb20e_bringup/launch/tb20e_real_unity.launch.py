@@ -91,6 +91,14 @@ def generate_launch_description():
         DeclareLaunchArgument("bucket_unity_position_sign", default_value="1.0"),
     ]
 
+    compensation_defaults = {
+        "lever_positive_min": "auto", "lever_negative_min": "auto",
+        "lever_start": "auto", "lever_stop": "auto",
+    }
+    for axis in ("swing", "boom", "arm", "bucket"):
+        for suffix, default in compensation_defaults.items():
+            arguments.append(DeclareLaunchArgument(f"{axis}_{suffix}", default_value=default))
+
     common_hardware_arguments = {
         "controllers_file": LaunchConfiguration("controllers_file"),
         "use_sim_time": LaunchConfiguration("use_sim_time"),
@@ -100,6 +108,11 @@ def generate_launch_description():
         "arm_state_topic": LaunchConfiguration("arm_state_topic"),
         "bucket_state_topic": LaunchConfiguration("bucket_state_topic"),
     }
+
+    for axis in ("swing", "boom", "arm", "bucket"):
+        for suffix in compensation_defaults:
+            name = f"{axis}_{suffix}"
+            common_hardware_arguments[name] = LaunchConfiguration(name)
 
     # The gamepad include uses the common control launch; explicitly select
     # this robot's actuator topics as well as its feedback topics.

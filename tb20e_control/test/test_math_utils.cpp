@@ -202,3 +202,46 @@ TEST(FeedbackVelocity, IdleTimeDoesNotBankCreditForLaterJump)
       degrees_to_radians(10.0), t + std::chrono::milliseconds(10001), false,
       degrees_to_radians(180.0)));
 }
+
+TEST(LeverCompensation, PositiveOnlyAndHysteresis)
+{
+  using tb20e_control::math::compensated_lever_command;
+  int direction = 0;
+  auto output = [&](double command) {
+      return compensated_lever_command(command, 45.0, 0.0, 2.0, 1.0, direction);
+    };
+  EXPECT_DOUBLE_EQ(output(0.0), 0.0);
+  EXPECT_DOUBLE_EQ(output(1.5), 0.0);
+  EXPECT_DOUBLE_EQ(output(2.0), 45.0);
+  EXPECT_DOUBLE_EQ(output(1.5), 45.0);
+  EXPECT_DOUBLE_EQ(output(1.0), 0.0);
+  EXPECT_DOUBLE_EQ(output(1.5), 0.0);
+  EXPECT_DOUBLE_EQ(output(70.0), 70.0);
+  EXPECT_DOUBLE_EQ(output(-0.5), -0.5);
+  EXPECT_DOUBLE_EQ(output(1.5), 0.0);
+  EXPECT_DOUBLE_EQ(output(0.0), 0.0);
+}
+
+TEST(LeverCompensation, SignBoundsReversalAndInvalidInput)
+{
+  using tb20e_control::math::compensated_lever_command;
+  using tb20e_control::math::bounded_lever_command;
+  int direction = 0;
+  auto output = [&](double command) {
+      return compensated_lever_command(
+        bounded_lever_command(command, -1.0, -80.0, 90.0),
+        45.0, 50.0, 2.0, 1.0, direction);
+    };
+  EXPECT_DOUBLE_EQ(output(3.0), -50.0);
+  EXPECT_DOUBLE_EQ(output(-1.5), 0.0);
+  EXPECT_DOUBLE_EQ(output(-2.0), 45.0);
+  EXPECT_DOUBLE_EQ(output(-200.0), 90.0);
+  EXPECT_DOUBLE_EQ(output(200.0), -80.0);
+  EXPECT_DOUBLE_EQ(output(0.0), 0.0);
+  EXPECT_EQ(direction, 0);
+  EXPECT_DOUBLE_EQ(
+    compensated_lever_command(
+      std::numeric_limits<double>::quiet_NaN(), 45.0, 50.0, 2.0, 1.0, direction), 0.0);
+  EXPECT_DOUBLE_EQ(compensated_lever_command(5.0, 45.0, 50.0, 1.0, 2.0, direction), 0.0);
+  EXPECT_DOUBLE_EQ(compensated_lever_command(0.5, 0.0, 0.0, 2.0, 1.0, direction), 0.5);
+}

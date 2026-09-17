@@ -13,8 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
+
+import yaml
+
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, EmitEvent, RegisterEventHandler
+from launch.actions import (
+    DeclareLaunchArgument, EmitEvent, OpaqueFunction, RegisterEventHandler,
+    SetLaunchConfiguration,
+)
 from launch.event_handlers import OnProcessExit
 from launch.events import Shutdown
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration
@@ -36,22 +43,69 @@ XACRO_ARGUMENT_DEFAULTS = {
     "swing_lever_sign": "1.0",
     "swing_lever_min": "-100.0",
     "swing_lever_max": "100.0",
+    "swing_lever_positive_min": "0.0",
+    "swing_lever_negative_min": "0.0",
+    "swing_lever_start": "2.0",
+    "swing_lever_stop": "1.0",
     "boom_state_topic": "/TB20e_0/current_boom_angle",
     "boom_command_topic": "/TB20e_0/manipulated_boom_lever",
     "boom_lever_sign": "-1.0",
     "boom_lever_min": "-100.0",
     "boom_lever_max": "100.0",
+    "boom_lever_positive_min": "0.0",
+    "boom_lever_negative_min": "0.0",
+    "boom_lever_start": "2.0",
+    "boom_lever_stop": "1.0",
     "arm_state_topic": "/TB20e_0/current_arm_angle",
     "arm_command_topic": "/TB20e_0/manipulated_arm_lever",
     "arm_lever_sign": "1.0",
     "arm_lever_min": "-100.0",
     "arm_lever_max": "100.0",
+    "arm_lever_positive_min": "0.0",
+    "arm_lever_negative_min": "0.0",
+    "arm_lever_start": "2.0",
+    "arm_lever_stop": "1.0",
     "bucket_state_topic": "/TB20e_0/current_bucket_angle",
     "bucket_command_topic": "/TB20e_0/manipulated_bucket_lever",
     "bucket_lever_sign": "1.0",
     "bucket_lever_min": "-100.0",
     "bucket_lever_max": "100.0",
+    "bucket_lever_positive_min": "0.0",
+    "bucket_lever_negative_min": "0.0",
+    "bucket_lever_start": "2.0",
+    "bucket_lever_stop": "1.0",
 }
+
+
+COMPENSATION_DEFAULTS = {
+    name: value for name, value in XACRO_ARGUMENT_DEFAULTS.items()
+    if name.endswith(("_lever_positive_min", "_lever_negative_min", "_lever_start", "_lever_stop"))
+}
+
+
+def load_compensation(context):
+    # Resolve the selected controller file at launch time; explicit CLI values win.
+    path = LaunchConfiguration("controllers_file").perform(context)
+    with open(path, encoding="utf-8") as stream:
+        document = yaml.safe_load(stream)
+    values = document.get("/**/tb20e_lever_hardware", {}).get("ros__parameters", {})
+    if not isinstance(values, dict):
+        raise ValueError("tb20e_lever_hardware.ros__parameters must be a mapping")
+    unknown = set(values) - set(COMPENSATION_DEFAULTS)
+    if unknown:
+        raise ValueError(f"Unknown lever compensation parameters: {sorted(unknown)}")
+    actions = []
+    for name, default in COMPENSATION_DEFAULTS.items():
+        if LaunchConfiguration(name).perform(context) != "auto":
+            continue
+        value = values.get(name, default)
+        if isinstance(value, bool):
+            raise ValueError(f"{name} must be a finite number")
+        value = float(value)
+        if not math.isfinite(value):
+            raise ValueError(f"{name} must be a finite number")
+        actions.append(SetLaunchConfiguration(name, str(value)))
+    return actions
 
 
 def generate_launch_description():
@@ -72,7 +126,9 @@ def generate_launch_description():
         ),
     ]
     declared_arguments.extend(
-        DeclareLaunchArgument(name, default_value=value)
+        DeclareLaunchArgument(
+            name, default_value="auto" if name in COMPENSATION_DEFAULTS else value
+        )
         for name, value in XACRO_ARGUMENT_DEFAULTS.items()
     )
 
@@ -155,6 +211,7 @@ def generate_launch_description():
     return LaunchDescription(
         declared_arguments
         + [
+            OpaqueFunction(function=load_compensation),
             robot_state_publisher,
             shutdown_on_control_exit,
             control_node,

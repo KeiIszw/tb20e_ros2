@@ -92,6 +92,11 @@ private:
     bool continuous{false};
     double position_min_rad{0.0};
     double position_max_rad{0.0};
+    double lever_positive_min{0.0};
+    double lever_negative_min{0.0};
+    double lever_start{2.0};
+    double lever_stop{1.0};
+    int active_direction{0};
   };
 
   struct FeedbackSample

@@ -56,6 +56,36 @@ inline double bounded_lever_command(
   return std::clamp(lever_sign * controller_command, lever_min, lever_max);
 }
 
+// Thresholds are in bounded, signed lever percent, not joint angle.
+// A direction reversal must pass the start threshold again.
+inline double compensated_lever_command(
+  const double command, const double positive_min, const double negative_min,
+  const double start, const double stop, int & active_direction)
+{
+  if (!std::isfinite(command) || !std::isfinite(positive_min) ||
+    !std::isfinite(negative_min) || !std::isfinite(start) || !std::isfinite(stop) ||
+    positive_min < 0.0 || negative_min < 0.0 || stop < 0.0 || start <= stop)
+  {
+    active_direction = 0;
+    return 0.0;
+  }
+  const int direction = (command > 0.0) - (command < 0.0);
+  const double minimum = direction > 0 ? positive_min : negative_min;
+  if (minimum == 0.0) {
+    active_direction = 0;
+    return command;
+  }
+  const double magnitude = std::abs(command);
+  if (magnitude <= stop ||
+    (active_direction != direction && magnitude < start))
+  {
+    active_direction = 0;
+    return 0.0;
+  }
+  active_direction = direction;
+  return direction * std::max(minimum, magnitude);
+}
+
 inline bool position_outside_limits(
   const double position,
   const double position_min,

@@ -143,6 +143,9 @@ hardware_interface::CallbackReturn Tb20eLeverHardware::on_init(
   position_states_.fill(0.0);
   velocity_states_.fill(0.0);
   effort_commands_.fill(0.0);
+  for (auto & axis : axis_configs_) {
+    axis.active_direction = 0;
+  }
   stale_reported_.fill(false);
   feedback_fault_latched_.store(false);
 
@@ -174,6 +177,9 @@ hardware_interface::CallbackReturn Tb20eLeverHardware::on_configure(
   active_.store(false);
   feedback_fault_latched_.store(false);
   effort_commands_.fill(0.0);
+  for (auto & axis : axis_configs_) {
+    axis.active_direction = 0;
+  }
   stale_reported_.fill(false);
   reset_feedback();
 
@@ -190,6 +196,9 @@ hardware_interface::CallbackReturn Tb20eLeverHardware::on_cleanup(
 {
   active_.store(false);
   effort_commands_.fill(0.0);
+  for (auto & axis : axis_configs_) {
+    axis.active_direction = 0;
+  }
   publish_zero_to_all_axes();
   stop_executor();
   reset_feedback();
@@ -201,6 +210,9 @@ hardware_interface::CallbackReturn Tb20eLeverHardware::on_activate(
 {
   active_.store(false);
   effort_commands_.fill(0.0);
+  for (auto & axis : axis_configs_) {
+    axis.active_direction = 0;
+  }
   stale_reported_.fill(false);
   publish_zero_to_all_axes();
 
@@ -239,6 +251,9 @@ hardware_interface::CallbackReturn Tb20eLeverHardware::on_deactivate(
 {
   active_.store(false);
   effort_commands_.fill(0.0);
+  for (auto & axis : axis_configs_) {
+    axis.active_direction = 0;
+  }
   publish_zero_to_all_axes();
   RCLCPP_INFO(node_->get_logger(), "Deactivated; published zero to all lever topics");
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -249,6 +264,9 @@ hardware_interface::CallbackReturn Tb20eLeverHardware::on_shutdown(
 {
   active_.store(false);
   effort_commands_.fill(0.0);
+  for (auto & axis : axis_configs_) {
+    axis.active_direction = 0;
+  }
   publish_zero_to_all_axes();
   stop_executor();
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -259,6 +277,9 @@ hardware_interface::CallbackReturn Tb20eLeverHardware::on_error(
 {
   active_.store(false);
   effort_commands_.fill(0.0);
+  for (auto & axis : axis_configs_) {
+    axis.active_direction = 0;
+  }
   publish_zero_to_all_axes();
   stop_executor();
   reset_feedback();
@@ -394,7 +415,7 @@ hardware_interface::return_type Tb20eLeverHardware::write(
     if (output_enabled && command_output_enabled_ &&
       !feedback_fault_latched_.load())
     {
-      const auto & config = axis_configs_[axis];
+      auto & config = axis_configs_[axis];
       bool moves_outside_end_stop = false;
       if (!config.continuous) {
         moves_outside_end_stop = math::command_points_outside_limit(
@@ -410,12 +431,19 @@ hardware_interface::return_type Tb20eLeverHardware::write(
           config.lever_sign,
           config.lever_min,
           config.lever_max);
+        lever_command = math::compensated_lever_command(
+          lever_command, config.lever_positive_min, config.lever_negative_min,
+          config.lever_start, config.lever_stop, config.active_direction);
       } else {
         RCLCPP_WARN_THROTTLE(
           node_->get_logger(), *node_->get_clock(), 2000,
           "Suppressing %s command at its configured joint limit",
           config.name.c_str());
       }
+    }
+
+    if (lever_command == 0.0) {
+      axis_configs_[axis].active_direction = 0;
     }
 
     if (is_active && !fresh[axis] && !stale_reported_[axis]) {
@@ -529,6 +557,28 @@ bool Tb20eLeverHardware::load_hardware_parameters()
       !parse_finite_double(
         info_, prefix + "lever_max", axis.lever_max, axis.lever_max))
     {
+      return false;
+    }
+
+    if (!parse_finite_double(
+        info_, prefix + "lever_positive_min", 0.0, axis.lever_positive_min) ||
+      !parse_finite_double(
+        info_, prefix + "lever_negative_min", 0.0, axis.lever_negative_min) ||
+      !parse_finite_double(info_, prefix + "lever_start", 2.0, axis.lever_start) ||
+      !parse_finite_double(info_, prefix + "lever_stop", 1.0, axis.lever_stop))
+    {
+      return false;
+    }
+    if (axis.lever_positive_min < 0.0 || axis.lever_positive_min > axis.lever_max ||
+      axis.lever_negative_min < 0.0 || axis.lever_negative_min > -axis.lever_min ||
+      axis.lever_stop < 0.0 || axis.lever_start <= axis.lever_stop ||
+      (axis.lever_positive_min > 0.0 && axis.lever_start > axis.lever_max) ||
+      (axis.lever_negative_min > 0.0 && axis.lever_start > -axis.lever_min))
+    {
+      RCLCPP_ERROR(
+        rclcpp::get_logger(kLoggerName),
+        "Invalid lever compensation limits or hysteresis for axis '%s'",
+        axis.name.c_str());
       return false;
     }
 

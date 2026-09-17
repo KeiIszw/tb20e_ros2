@@ -22,24 +22,40 @@
   <xacro:arg name="swing_lever_sign" default="1.0"/>
   <xacro:arg name="swing_lever_min" default="-100.0"/>
   <xacro:arg name="swing_lever_max" default="100.0"/>
+  <xacro:arg name="swing_lever_positive_min" default="0.0"/>
+  <xacro:arg name="swing_lever_negative_min" default="0.0"/>
+  <xacro:arg name="swing_lever_start" default="2.0"/>
+  <xacro:arg name="swing_lever_stop" default="1.0"/>
 
   <xacro:arg name="boom_state_topic" default="/current_boom_angle"/>
   <xacro:arg name="boom_command_topic" default="/manipulated_boom_lever"/>
   <xacro:arg name="boom_lever_sign" default="-1.0"/>
   <xacro:arg name="boom_lever_min" default="-100.0"/>
   <xacro:arg name="boom_lever_max" default="100.0"/>
+  <xacro:arg name="boom_lever_positive_min" default="0.0"/>
+  <xacro:arg name="boom_lever_negative_min" default="0.0"/>
+  <xacro:arg name="boom_lever_start" default="2.0"/>
+  <xacro:arg name="boom_lever_stop" default="1.0"/>
 
   <xacro:arg name="arm_state_topic" default="/current_arm_angle"/>
   <xacro:arg name="arm_command_topic" default="/manipulated_arm_lever"/>
   <xacro:arg name="arm_lever_sign" default="1.0"/>
   <xacro:arg name="arm_lever_min" default="-100.0"/>
   <xacro:arg name="arm_lever_max" default="100.0"/>
+  <xacro:arg name="arm_lever_positive_min" default="0.0"/>
+  <xacro:arg name="arm_lever_negative_min" default="0.0"/>
+  <xacro:arg name="arm_lever_start" default="2.0"/>
+  <xacro:arg name="arm_lever_stop" default="1.0"/>
 
   <xacro:arg name="bucket_state_topic" default="/current_bucket_angle"/>
   <xacro:arg name="bucket_command_topic" default="/manipulated_bucket_lever"/>
   <xacro:arg name="bucket_lever_sign" default="1.0"/>
   <xacro:arg name="bucket_lever_min" default="-100.0"/>
   <xacro:arg name="bucket_lever_max" default="100.0"/>
+  <xacro:arg name="bucket_lever_positive_min" default="0.0"/>
+  <xacro:arg name="bucket_lever_negative_min" default="0.0"/>
+  <xacro:arg name="bucket_lever_start" default="2.0"/>
+  <xacro:arg name="bucket_lever_stop" default="1.0"/>
 
   <xacro:include filename="$(find tb20e_control)/urdf/tb20e.ros2_control.xacro"/>
 
