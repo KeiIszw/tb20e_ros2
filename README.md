@@ -19,8 +19,8 @@ HTTP入力には、同じワークスペースに`scratch_hci_bridge`パッケ�
 |---|---|---|
 | 実機現在角 | `/current_<axis>_angle` | `std_msgs/msg/Float64`, degree |
 | 実機レバー指令 | `/manipulated_<axis>_lever` | `std_msgs/msg/Float64`, -100～100 |
-| Unity現在角 | `/sim/tb20e/current_<axis>_angle` | `std_msgs/msg/Float64`, degree |
-| Unity位置指令 | `/tb20e/<axis>/cmd` | `std_msgs/msg/Float64`, rad |
+| Unity現在角（任意、既定OFF） | `/sim/TB20e_0/current_<axis>_angle` | `std_msgs/msg/Float64`, degree |
+| Unity位置指令 | `/TB20e/<axis>/cmd` | `std_msgs/msg/Float64`, rad |
 
 `<axis>`は`swing`、`boom`、`arm`、`bucket`です。
 
@@ -91,14 +91,14 @@ ros2 launch tb20e_bringup tb20e_real_unity.launch.py \
 ```
 
 HTTPモードでは`*_sim_state_topic`の指定は不要です。hardwareは既定の
-`/current_*_angle`を購読します。Unityが`/sim/tb20e/current_*_angle`を使う場合は、
+`/current_*_angle`を購読します。Unityが`/sim/TB20e_0/current_*_angle`を使う場合は、
 上のコマンドに次の4引数を追加します。
 
 ```text
-swing_state_topic:=/sim/tb20e/current_swing_angle
-boom_state_topic:=/sim/tb20e/current_boom_angle
-arm_state_topic:=/sim/tb20e/current_arm_angle
-bucket_state_topic:=/sim/tb20e/current_bucket_angle
+swing_state_topic:=/sim/TB20e_0/current_swing_angle
+boom_state_topic:=/sim/TB20e_0/current_boom_angle
+arm_state_topic:=/sim/TB20e_0/current_arm_angle
+bucket_state_topic:=/sim/TB20e_0/current_bucket_angle
 ```
 
 **実機とUnityを同時にHTTP制御する場合:**

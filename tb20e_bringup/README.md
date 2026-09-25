@@ -13,8 +13,9 @@
   ├─> /tb20e_gamepad_controller/commands
   │     -> ros2_control
   │     -> /manipulated_<axis>_lever（実機）
-  └─> Unity feedbackを基準に位置目標へ積分
-        -> /tb20e/<axis>/cmd（Unity）
+└─> 実機IMU /TB20e_0/current_<axis>_angle
+        -> tb20e_imu_to_sim
+        -> /TB20e/<axis>/cmd（Unity）
 ```
 
 ### HTTP
@@ -25,24 +26,28 @@ HTTP command
   -> /tb20e_controller/follow_joint_trajectory
        ├─> ros2_control PID
        │     -> /manipulated_<axis>_lever（実機）
-       └─> goal受理後
-             -> /tb20e/<axis>/cmd（Unity）
+└─> 実機IMU /TB20e_0/current_<axis>_angle
+             -> tb20e_imu_to_sim
+             -> /TB20e/<axis>/cmd（Unity）
 ```
 
-HTTPの4軸Unity指令は、FollowJointTrajectory goalが受理された後にpublishされます。
-Action serverが存在しない場合やgoalが拒否された場合はUnityへも送信されません。
+既定では、Unityに目標角ではなく実機IMUの実測角を送ります。IMUのdegreeを
+radianへ変換し、swingだけはUnityとの座標系差に合わせて符号を反転します。
+HTTP goalの目標角を直接Unityへ送る従来経路は
+`unity_position_output_enabled:=true imu_to_sim_enabled:=false`のときだけ使用します。
 
 ## Topic契約
 
 | 用途 | 既定topic | 型 | 単位 |
 |---|---|---|---|
-| 実機feedback | `/current_<axis>_angle` | `std_msgs/msg/Float64` | degree |
-| 実機レバー指令 | `/manipulated_<axis>_lever` | `std_msgs/msg/Float64` | -100～100 |
-| Unity feedback | `/sim/tb20e/current_<axis>_angle` | `std_msgs/msg/Float64` | degree |
-| Unity位置指令 | `/tb20e/<axis>/cmd` | `std_msgs/msg/Float64` | rad |
+| 実機feedback | `/TB20e_0/current_<axis>_angle` | `std_msgs/msg/Float64` | degree |
+| 実機レバー指令 | `/TB20e_0/manipulated_<axis>_lever` | `std_msgs/msg/Float64` | -100～100 |
+| Unity位置指令 | `/TB20e/<axis>/cmd` | `std_msgs/msg/Float64` | rad |
+| Unity feedback（任意） | `/sim/TB20e_0/current_<axis>_angle` | `std_msgs/msg/Float64` | degree |
 
-Unity位置指令はnode namespaceに依存しない絶対topic名です。prefixに先頭の`/`がない
-設定を渡した場合も、`/tb20e/<axis>/cmd`の形式へ正規化されます。
+Unity位置指令はnode namespaceに依存しない絶対topic名です。
+Unityからのfeedback publisherは既定で無効で、有効化した場合も実機IMUと混在しない
+`/sim/TB20e_0/current_<axis>_angle`へ配信します。
 
 Unityと実機ではswingの正方向が逆であるため、Unityのswing feedbackと位置指令だけを
 既定で`-1.0`倍します。実機向けレバー指令の方向はこの変換の影響を受けません。
@@ -100,16 +105,16 @@ ros2 launch tb20e_bringup tb20e_real_unity.launch.py \
 `real_output_enabled:=false`でもhardware interfaceはfeedbackを必要とします。
 Unityをfeedback源として使うため、実機用state topicもUnity側へ向けます。
 
-Unityが新topic `/sim/tb20e/current_*_angle` をpublishする場合:
+Unityが任意feedback `/sim/TB20e_0/current_*_angle` をpublishする場合:
 
 ```bash
 ros2 launch tb20e_bringup tb20e_real_unity.launch.py \
   input_source:=gamepad \
   real_output_enabled:=false \
-  swing_state_topic:=/sim/tb20e/current_swing_angle \
-  boom_state_topic:=/sim/tb20e/current_boom_angle \
-  arm_state_topic:=/sim/tb20e/current_arm_angle \
-  bucket_state_topic:=/sim/tb20e/current_bucket_angle
+  swing_state_topic:=/sim/TB20e_0/current_swing_angle \
+  boom_state_topic:=/sim/TB20e_0/current_boom_angle \
+  arm_state_topic:=/sim/TB20e_0/current_arm_angle \
+  bucket_state_topic:=/sim/TB20e_0/current_bucket_angle
 ```
 
 Unityが旧topic `/current_*_angle` をpublishしている場合は、hardware側は既定値のままにし、
@@ -135,13 +140,15 @@ hardwareの4本のstate topicをUnity feedbackへ向ける必要があります�
 |---|---:|---|
 | `input_source` | `gamepad` | `gamepad`または`http` |
 | `real_output_enabled` | `false` | 実機レバー出力の安全ゲート |
-| `unity_position_output_enabled` | `true` | Unity位置指令の有効化 |
+| `imu_to_sim_enabled` | `true` | 実機IMU角をUnity位置指令へ中継 |
+| `unity_position_output_enabled` | `false` | 入力目標をUnityへ直接出力する従来経路 |
+| `unity_position_command_prefix` | `/TB20e` | HTTPモードのUnity直接出力prefix |
 | `joy_device_id` | `0` | `joy_node`のdevice ID |
 | `neutral_hold_sec` | `0.5` | 操作開始前に全軸を中央で維持する時間 |
 | `http_host` | `0.0.0.0` | HTTP serverのbind先 |
 | `http_port` | `8899` | HTTP serverのport |
 | `<axis>_state_topic` | `/current_<axis>_angle` | hardware／実機用feedback |
-| `<axis>_sim_state_topic` | `/sim/tb20e/current_<axis>_angle` | ゲームパッド積分用Unity feedback |
+| `<axis>_sim_state_topic` | `/sim/TB20e_0/current_<axis>_angle` | ゲームパッド積分用Unity feedback（任意） |
 | `sim_feedback_timeout_sec` | `0.25` | Unity feedbackのtimeout |
 | `<axis>_unity_speed_deg_s` | `50.0` | stick 100%時のUnity目標変化速度 |
 | `swing_unity_position_sign` | `-1.0` | Unity swing座標の符号 |
@@ -155,7 +162,7 @@ hardwareの4本のstate topicをUnity feedbackへ向ける必要があります�
 ```bash
 ros2 topic list | grep -E 'current_(swing|boom|arm|bucket)_angle'
 ros2 topic hz /current_arm_angle
-ros2 topic hz /sim/tb20e/current_arm_angle
+ros2 topic hz /sim/TB20e_0/current_arm_angle
 ros2 topic echo /joy
 ```
 

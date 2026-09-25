@@ -65,9 +65,9 @@ public:
     for (std::size_t axis = 0; axis < gamepad::kCommandCount; ++axis) {
       const auto & name = axis_names[axis];
       sim_state_topics_[axis] = declare_parameter<std::string>(
-        name + "_sim_state_topic", "/sim/tb20e/current_" + name + "_angle");
+        name + "_sim_state_topic", "/sim/TB20e_0/current_" + name + "_angle");
       unity_command_topics_[axis] = declare_parameter<std::string>(
-        name + "_unity_command_topic", "/tb20e/" + name + "/cmd");
+        name + "_unity_command_topic", "/TB20e/" + name + "/cmd");
       if (!unity_command_topics_[axis].empty() &&
         unity_command_topics_[axis].front() != '/')
       {

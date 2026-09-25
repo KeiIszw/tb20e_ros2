@@ -50,6 +50,19 @@ ament_target_dependencies(tb20e_gamepad_node
   std_msgs
 )
 
+add_executable(tb20e_imu_to_sim_node
+  src/tb20e_imu_to_sim_node.cpp
+)
+target_compile_features(tb20e_imu_to_sim_node PUBLIC cxx_std_17)
+target_include_directories(tb20e_imu_to_sim_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(tb20e_imu_to_sim_node
+  rclcpp
+  std_msgs
+)
+
 install(
   TARGETS ${PROJECT_NAME}
   EXPORT export_${PROJECT_NAME}
@@ -58,7 +71,7 @@ install(
   RUNTIME DESTINATION bin
 )
 install(
-  TARGETS tb20e_gamepad_node
+  TARGETS tb20e_gamepad_node tb20e_imu_to_sim_node
   DESTINATION lib/${PROJECT_NAME}
 )
 install(

@@ -152,15 +152,15 @@ ros2 launch tb20e_control tb20e_gamepad.launch.py \
 Unity feedbackを初期値としてstick量を位置変化へ積分し、次の絶対topicへradでpublishします。
 
 ```text
-/tb20e/swing/cmd
-/tb20e/boom/cmd
-/tb20e/arm/cmd
-/tb20e/bucket/cmd
+/TB20e/swing/cmd
+/TB20e/boom/cmd
+/TB20e/arm/cmd
+/TB20e/bucket/cmd
 ```
 
 | 引数 | 既定値 | 説明 |
 |---|---:|---|
-| `<axis>_sim_state_topic` | `/sim/tb20e/current_<axis>_angle` | Unity現在角、degree |
+| `<axis>_sim_state_topic` | `/sim/TB20e_0/current_<axis>_angle` | Unity現在角、degree |
 | `sim_feedback_timeout_sec` | `0.25` | Unity feedback timeout |
 | `<axis>_unity_speed_deg_s` | `50.0` | stick 100%時の目標変化速度 |
 | `swing_unity_position_sign` | `-1.0` | Unity swing座標変換 |
@@ -206,7 +206,7 @@ ros2 launch tb20e_control tb20e_control.launch.py \
   command_output_enabled:=false \
   state_timeout_sec:=0.20 \
   initial_feedback_wait_sec:=3.0 \
-  boom_state_topic:=/sim/tb20e/current_boom_angle \
+  boom_state_topic:=/sim/TB20e_0/current_boom_angle \
   boom_lever_min:=-60.0 \
   boom_lever_max:=60.0
 ```

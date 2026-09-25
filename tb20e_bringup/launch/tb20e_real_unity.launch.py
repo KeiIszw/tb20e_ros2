@@ -22,7 +22,8 @@ from launch.substitutions import (
     PathJoinSubstitution,
     PythonExpression,
 )
-from launch_ros.actions import PushRosNamespace, SetRemap
+from launch_ros.actions import Node, PushRosNamespace, SetRemap
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -54,7 +55,11 @@ def generate_launch_description():
             description="Command source; the two modes are mutually exclusive.",
         ),
         DeclareLaunchArgument("real_output_enabled", default_value="true"),
-        DeclareLaunchArgument("unity_position_output_enabled", default_value="true"),
+        DeclareLaunchArgument("unity_position_output_enabled", default_value="false"),
+        DeclareLaunchArgument("imu_to_sim_enabled", default_value="true"),
+        DeclareLaunchArgument(
+            "unity_position_command_prefix", default_value="/TB20e"
+        ),
         DeclareLaunchArgument("use_sim_time", default_value="false"),
         DeclareLaunchArgument("joy_device_id", default_value="0"),
         DeclareLaunchArgument("neutral_hold_sec", default_value="0.5"),
@@ -79,6 +84,18 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "bucket_sim_state_topic",
             default_value=["/sim/", robot_namespace, "/current_bucket_angle"],
+        ),
+        DeclareLaunchArgument(
+            "swing_unity_command_topic", default_value="/TB20e/swing/cmd"
+        ),
+        DeclareLaunchArgument(
+            "boom_unity_command_topic", default_value="/TB20e/boom/cmd"
+        ),
+        DeclareLaunchArgument(
+            "arm_unity_command_topic", default_value="/TB20e/arm/cmd"
+        ),
+        DeclareLaunchArgument(
+            "bucket_unity_command_topic", default_value="/TB20e/bucket/cmd"
         ),
         DeclareLaunchArgument("sim_feedback_timeout_sec", default_value="0.25"),
         DeclareLaunchArgument("swing_unity_speed_deg_s", default_value="50.0"),
@@ -140,6 +157,18 @@ def generate_launch_description():
             "arm_sim_state_topic": LaunchConfiguration("arm_sim_state_topic"),
             "bucket_sim_state_topic": LaunchConfiguration(
                 "bucket_sim_state_topic"
+            ),
+            "swing_unity_command_topic": LaunchConfiguration(
+                "swing_unity_command_topic"
+            ),
+            "boom_unity_command_topic": LaunchConfiguration(
+                "boom_unity_command_topic"
+            ),
+            "arm_unity_command_topic": LaunchConfiguration(
+                "arm_unity_command_topic"
+            ),
+            "bucket_unity_command_topic": LaunchConfiguration(
+                "bucket_unity_command_topic"
             ),
             "swing_unity_speed_deg_s": LaunchConfiguration(
                 "swing_unity_speed_deg_s"
@@ -207,7 +236,12 @@ def generate_launch_description():
                 ["/", robot_namespace, "/tb20e_controller/follow_joint_trajectory"]
             ),
             "joint_state_topic": ["/", robot_namespace, "/joint_states"],
-            "unity_position_command_prefix": ["/", robot_namespace],
+            "unity_position_command_prefix": LaunchConfiguration(
+                "unity_position_command_prefix"
+            ),
+            "direct_joint_command_prefix": LaunchConfiguration(
+                "unity_position_command_prefix"
+            ),
             "swing_unity_position_sign": LaunchConfiguration(
                 "swing_unity_position_sign"
             ),
@@ -224,6 +258,43 @@ def generate_launch_description():
         condition=_is_source("http"),
     )
 
+    imu_to_sim = Node(
+        package="tb20e_control",
+        executable="tb20e_imu_to_sim_node",
+        output="screen",
+        condition=IfCondition(LaunchConfiguration("imu_to_sim_enabled")),
+        parameters=[{
+            "swing_state_topic": LaunchConfiguration("swing_state_topic"),
+            "boom_state_topic": LaunchConfiguration("boom_state_topic"),
+            "arm_state_topic": LaunchConfiguration("arm_state_topic"),
+            "bucket_state_topic": LaunchConfiguration("bucket_state_topic"),
+            "swing_sim_command_topic": LaunchConfiguration(
+                "swing_unity_command_topic"
+            ),
+            "boom_sim_command_topic": LaunchConfiguration(
+                "boom_unity_command_topic"
+            ),
+            "arm_sim_command_topic": LaunchConfiguration(
+                "arm_unity_command_topic"
+            ),
+            "bucket_sim_command_topic": LaunchConfiguration(
+                "bucket_unity_command_topic"
+            ),
+            "swing_sim_position_sign": ParameterValue(
+                LaunchConfiguration("swing_unity_position_sign"), value_type=float
+            ),
+            "boom_sim_position_sign": ParameterValue(
+                LaunchConfiguration("boom_unity_position_sign"), value_type=float
+            ),
+            "arm_sim_position_sign": ParameterValue(
+                LaunchConfiguration("arm_unity_position_sign"), value_type=float
+            ),
+            "bucket_sim_position_sign": ParameterValue(
+                LaunchConfiguration("bucket_unity_position_sign"), value_type=float
+            ),
+        }],
+    )
+
     # The gamepad node uses absolute names; scope these explicitly too.
     remappings = [
         SetRemap(src="/joy", dst=["/", robot_namespace, "/joy"]),
@@ -232,10 +303,6 @@ def generate_launch_description():
             dst=["/", robot_namespace, "/tb20e_gamepad_controller/commands"],
         ),
     ]
-    remappings.extend(
-        SetRemap(src=f"/tb20e/{axis}/cmd", dst=["/", robot_namespace, f"/{axis}/cmd"])
-        for axis in ("swing", "boom", "arm", "bucket")
-    )
     return LaunchDescription(arguments + [
         GroupAction([
             PushRosNamespace(robot_namespace),
@@ -243,5 +310,6 @@ def generate_launch_description():
             gamepad,
             http_control,
             http_bridge,
+            imu_to_sim,
         ]),
     ])

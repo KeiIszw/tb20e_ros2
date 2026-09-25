@@ -57,19 +57,31 @@ def generate_launch_description():
         DeclareLaunchArgument("sim_feedback_timeout_sec", default_value="0.25"),
         DeclareLaunchArgument(
             "swing_sim_state_topic",
-            default_value="/sim/tb20e/current_swing_angle",
+            default_value="/sim/TB20e_0/current_swing_angle",
         ),
         DeclareLaunchArgument(
             "boom_sim_state_topic",
-            default_value="/sim/tb20e/current_boom_angle",
+            default_value="/sim/TB20e_0/current_boom_angle",
         ),
         DeclareLaunchArgument(
             "arm_sim_state_topic",
-            default_value="/sim/tb20e/current_arm_angle",
+            default_value="/sim/TB20e_0/current_arm_angle",
         ),
         DeclareLaunchArgument(
             "bucket_sim_state_topic",
-            default_value="/sim/tb20e/current_bucket_angle",
+            default_value="/sim/TB20e_0/current_bucket_angle",
+        ),
+        DeclareLaunchArgument(
+            "swing_unity_command_topic", default_value="/TB20e/swing/cmd"
+        ),
+        DeclareLaunchArgument(
+            "boom_unity_command_topic", default_value="/TB20e/boom/cmd"
+        ),
+        DeclareLaunchArgument(
+            "arm_unity_command_topic", default_value="/TB20e/arm/cmd"
+        ),
+        DeclareLaunchArgument(
+            "bucket_unity_command_topic", default_value="/TB20e/bucket/cmd"
         ),
         DeclareLaunchArgument("swing_unity_speed_deg_s", default_value="50.0"),
         DeclareLaunchArgument("boom_unity_speed_deg_s", default_value="50.0"),
@@ -137,6 +149,18 @@ def generate_launch_description():
             "arm_sim_state_topic": LaunchConfiguration("arm_sim_state_topic"),
             "bucket_sim_state_topic": LaunchConfiguration(
                 "bucket_sim_state_topic"
+            ),
+            "swing_unity_command_topic": LaunchConfiguration(
+                "swing_unity_command_topic"
+            ),
+            "boom_unity_command_topic": LaunchConfiguration(
+                "boom_unity_command_topic"
+            ),
+            "arm_unity_command_topic": LaunchConfiguration(
+                "arm_unity_command_topic"
+            ),
+            "bucket_unity_command_topic": LaunchConfiguration(
+                "bucket_unity_command_topic"
             ),
             "swing_unity_speed_deg_s": _double_parameter(
                 "swing_unity_speed_deg_s"
