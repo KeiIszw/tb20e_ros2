@@ -47,16 +47,16 @@
     # not validated gains for a physical excavator.
     gains:
       swing_joint:
-        p: 100.0
+        p: 500.0
         i: 0.0
         d: 0.0
         angle_wraparound: true
       boom_joint:
-        p: 100.0
+        p: 400.0
         i: 0.0
         d: 0.0
       arm_joint:
-        p: 100.0
+        p: 500.0
         i: 0.0
         d: 0.0
       bucket_joint:
@@ -81,19 +81,19 @@
 # 0 disables compensation in that direction. Changes take effect after restart.
 /**/tb20e_lever_hardware:
   ros__parameters:
-    swing_lever_positive_min: 0.0
-    swing_lever_negative_min: 0.0
+    swing_lever_positive_min: 50.0
+    swing_lever_negative_min: 50.0
     swing_lever_start: 2.0
     swing_lever_stop: 1.0
     boom_lever_positive_min: 0.0
     boom_lever_negative_min: 0.0
     boom_lever_start: 2.0
     boom_lever_stop: 1.0
-    arm_lever_positive_min: 0.0
-    arm_lever_negative_min: 0.0
+    arm_lever_positive_min: 50.0
+    arm_lever_negative_min: 50.0
     arm_lever_start: 2.0
     arm_lever_stop: 1.0
-    bucket_lever_positive_min: 45.0
-    bucket_lever_negative_min: 38.0
+    bucket_lever_positive_min: 50.0
+    bucket_lever_negative_min: 45.0
     bucket_lever_start: 2.0
     bucket_lever_stop: 1.0

@@ -32,7 +32,7 @@ from launch.substitutions import PathJoinSubstitution
 
 
 XACRO_ARGUMENT_DEFAULTS = {
-    "state_timeout_sec": "0.10",
+    "state_timeout_sec": "1.50",
     "initial_feedback_wait_sec": "2.0",
     "feedback_limit_tolerance_deg": "2.0",
     "max_feedback_velocity_deg_s": "180.0",

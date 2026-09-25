@@ -137,7 +137,7 @@ hardwareの4本のstate topicをUnity feedbackへ向ける必要があります�
 | `real_output_enabled` | `false` | 実機レバー出力の安全ゲート |
 | `unity_position_output_enabled` | `true` | Unity位置指令の有効化 |
 | `joy_device_id` | `0` | `joy_node`のdevice ID |
-| `deadman_button` | `-1` | 押下中だけ操作を許可するbutton番号。`-1`は無効 |
+| `neutral_hold_sec` | `0.5` | 操作開始前に全軸を中央で維持する時間 |
 | `http_host` | `0.0.0.0` | HTTP serverのbind先 |
 | `http_port` | `8899` | HTTP serverのport |
 | `<axis>_state_topic` | `/current_<axis>_angle` | hardware／実機用feedback |

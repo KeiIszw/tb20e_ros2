@@ -18,6 +18,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -26,6 +27,7 @@
 #include "std_msgs/msg/float64.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include "tb20e_control/gamepad_mapping.hpp"
+#include "tb20e_control/gamepad_safety.hpp"
 #include "tb20e_control/math_utils.hpp"
 #include "tb20e_control/position_command.hpp"
 
@@ -35,6 +37,8 @@ namespace tb20e_control
 class Tb20eGamepadNode final : public rclcpp::Node
 {
 public:
+  static constexpr std::size_t kStartButton = 9;
+
   Tb20eGamepadNode()
   : Node("tb20e_gamepad"), last_joy_time_(std::chrono::steady_clock::now()),
     last_position_update_(std::chrono::steady_clock::now())
@@ -49,8 +53,8 @@ public:
     mapping_.boom_scale = declare_parameter<double>("boom_scale", 100.0);
     mapping_.deadzone = declare_parameter<double>("deadzone", 0.10);
     joy_timeout_sec_ = declare_parameter<double>("joy_timeout_sec", 0.25);
+    neutral_hold_sec_ = declare_parameter<double>("neutral_hold_sec", 0.5);
     publish_rate_ = declare_parameter<double>("publish_rate", 20.0);
-    deadman_button_ = declare_parameter<int>("deadman_button", -1);
     unity_position_output_enabled_ =
       declare_parameter<bool>("unity_position_output_enabled", false);
     sim_feedback_timeout_sec_ =
@@ -78,6 +82,7 @@ public:
     }
 
     validate_parameters();
+    safety_gate_.emplace(neutral_hold_sec_, joy_timeout_sec_);
 
     command_publisher_ = create_publisher<std_msgs::msg::Float64MultiArray>(
       "/tb20e_gamepad_controller/commands", rclcpp::QoS(10).reliable());
@@ -108,8 +113,10 @@ public:
     RCLCPP_INFO(
       get_logger(),
       "Gamepad mapping ready: left X=swing, left Y=arm, right X=bucket, "
-      "right Y=boom (timeout %.3f s, Unity position output %s)",
-      joy_timeout_sec_, unity_position_output_enabled_ ? "enabled" : "disabled");
+      "right Y=boom (timeout %.3f s, neutral hold %.3f s, Start button %zu, "
+      "Unity position output %s)",
+      joy_timeout_sec_, neutral_hold_sec_, kStartButton,
+      unity_position_output_enabled_ ? "enabled" : "disabled");
   }
 
 private:
@@ -139,11 +146,11 @@ private:
     if (!std::isfinite(joy_timeout_sec_) || joy_timeout_sec_ <= 0.0) {
       throw std::invalid_argument("joy_timeout_sec must be greater than zero");
     }
+    if (!std::isfinite(neutral_hold_sec_) || neutral_hold_sec_ <= 0.0) {
+      throw std::invalid_argument("neutral_hold_sec must be greater than zero");
+    }
     if (!std::isfinite(publish_rate_) || publish_rate_ <= 0.0) {
       throw std::invalid_argument("publish_rate must be greater than zero");
-    }
-    if (deadman_button_ < -1) {
-      throw std::invalid_argument("deadman_button must be -1 or a non-negative index");
     }
     if (!std::isfinite(sim_feedback_timeout_sec_) ||
       sim_feedback_timeout_sec_ <= 0.0)
@@ -190,24 +197,39 @@ private:
   {
     std::lock_guard<std::mutex> lock(command_mutex_);
     const bool axes_valid = gamepad::axis_indices_are_valid(message->axes, mapping_);
-    const bool deadman_valid = deadman_button_ < 0 ||
-      static_cast<std::size_t>(deadman_button_) < message->buttons.size();
+    const bool toggle_valid = kStartButton < message->buttons.size();
 
-    if (!axes_valid || !deadman_valid) {
+    if (!axes_valid || !toggle_valid) {
       latest_command_.fill(0.0);
       have_valid_joy_ = false;
+      safety_gate_->reset();
       RCLCPP_WARN_THROTTLE(
         get_logger(), *get_clock(), 2000,
         "Joy message does not contain every configured axis/button; commanding zero");
       return;
     }
 
-    const bool deadman_pressed = deadman_button_ < 0 ||
-      message->buttons[deadman_button_] != 0;
-    latest_command_ = deadman_pressed ?
+    const bool toggle_pressed = message->buttons[kStartButton] != 0;
+    const auto now = std::chrono::steady_clock::now();
+    const double now_sec = std::chrono::duration<double>(now.time_since_epoch()).count();
+    const bool was_armed = safety_gate_->armed();
+    const bool input_allowed = safety_gate_->update(
+      message->axes, mapping_, toggle_pressed, now_sec);
+    if (!was_armed && safety_gate_->armed()) {
+      RCLCPP_INFO(get_logger(), "Gamepad control enabled");
+    } else if (was_armed && !safety_gate_->armed()) {
+      RCLCPP_INFO(get_logger(), "Gamepad control stopped");
+    } else if (!input_allowed) {
+      RCLCPP_WARN_THROTTLE(
+        get_logger(), *get_clock(), 2000,
+        "Gamepad stopped: center all sticks, release Start button %zu, "
+        "then press it after %.2f s",
+        kStartButton, neutral_hold_sec_);
+    }
+    latest_command_ = input_allowed ?
       gamepad::map_axes(message->axes, mapping_) :
       std::array<double, gamepad::kCommandCount>{};
-    last_joy_time_ = std::chrono::steady_clock::now();
+    last_joy_time_ = now;
     have_valid_joy_ = true;
   }
 
@@ -226,6 +248,9 @@ private:
       timed_out = !have_valid_joy_ || age > joy_timeout_sec_;
       if (!timed_out) {
         command = latest_command_;
+      } else {
+        latest_command_.fill(0.0);
+        safety_gate_->reset();
       }
 
       if (unity_position_output_enabled_) {
@@ -283,8 +308,9 @@ private:
 
   gamepad::Mapping mapping_;
   double joy_timeout_sec_{0.25};
+  double neutral_hold_sec_{0.5};
   double publish_rate_{20.0};
-  int deadman_button_{-1};
+  std::optional<gamepad::NeutralToggleGate> safety_gate_;
   bool unity_position_output_enabled_{false};
   double sim_feedback_timeout_sec_{0.25};
   position_command::Config position_config_;

@@ -57,7 +57,7 @@ def generate_launch_description():
         DeclareLaunchArgument("unity_position_output_enabled", default_value="true"),
         DeclareLaunchArgument("use_sim_time", default_value="false"),
         DeclareLaunchArgument("joy_device_id", default_value="0"),
-        DeclareLaunchArgument("deadman_button", default_value="-1"),
+        DeclareLaunchArgument("neutral_hold_sec", default_value="0.5"),
         DeclareLaunchArgument("http_host", default_value="0.0.0.0"),
         DeclareLaunchArgument("http_port", default_value="8899"),
         DeclareLaunchArgument("swing_state_topic", default_value=["/", robot_namespace, "/current_swing_angle"]),
@@ -126,7 +126,7 @@ def generate_launch_description():
     gamepad_arguments.update(
         {
             "joy_device_id": LaunchConfiguration("joy_device_id"),
-            "deadman_button": LaunchConfiguration("deadman_button"),
+            "neutral_hold_sec": LaunchConfiguration("neutral_hold_sec"),
             "unity_position_output_enabled": LaunchConfiguration(
                 "unity_position_output_enabled"
             ),

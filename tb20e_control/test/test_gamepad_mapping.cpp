@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <limits>
 #include <vector>
 
 #include "gtest/gtest.h"
 #include "tb20e_control/gamepad_mapping.hpp"
+#include "tb20e_control/gamepad_safety.hpp"
 
 namespace
 {
@@ -63,6 +65,61 @@ TEST(GamepadMapping, SupportsDirectionOverrideWithScaleSign)
 
   const auto command = tb20e_control::gamepad::map_axes(axes, mapping);
   EXPECT_DOUBLE_EQ(command[2], 25.0);
+}
+
+TEST(GamepadSafety, StartPressTogglesControlAndStopWorksWhileMoving)
+{
+  tb20e_control::gamepad::NeutralToggleGate gate(0.5, 0.25);
+  const tb20e_control::gamepad::Mapping mapping;
+  const std::vector<float> neutral(4, 0.0F);
+  const std::vector<float> startup(4, -1.0F);
+  const std::vector<float> motion{0.5F, 0.0F, 0.0F, 0.0F};
+
+  EXPECT_FALSE(gate.update(startup, mapping, false, 0.0));
+  EXPECT_FALSE(gate.update(neutral, mapping, true, 0.05));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 0.10));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 0.30));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 0.50));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 0.60));
+  EXPECT_FALSE(gate.update(neutral, mapping, true, 0.65));
+  EXPECT_TRUE(gate.update(motion, mapping, true, 0.70));
+  EXPECT_TRUE(gate.update(motion, mapping, false, 0.75));
+  EXPECT_FALSE(gate.update(motion, mapping, true, 0.80));
+  EXPECT_FALSE(gate.armed());
+  EXPECT_FALSE(gate.update(neutral, mapping, true, 0.85));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 0.90));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 1.10));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 1.30));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 1.42));
+  EXPECT_FALSE(gate.update(neutral, mapping, true, 1.47));
+  EXPECT_TRUE(gate.update(motion, mapping, false, 1.52));
+}
+
+TEST(GamepadSafety, ReArmsAfterInputGapAndRejectsInvalidAxis)
+{
+  tb20e_control::gamepad::NeutralToggleGate gate(0.5, 0.25);
+  const tb20e_control::gamepad::Mapping mapping;
+  const std::vector<float> neutral(4, 0.0F);
+  const std::vector<float> motion{0.5F, 0.0F, 0.0F, 0.0F};
+
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 0.0));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 0.2));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 0.4));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 0.5));
+  EXPECT_FALSE(gate.update(neutral, mapping, true, 0.55));
+  EXPECT_TRUE(gate.update(motion, mapping, true, 0.6));
+  EXPECT_FALSE(gate.update(motion, mapping, true, 1.0));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 1.05));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 1.25));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 1.45));
+  EXPECT_FALSE(gate.update(neutral, mapping, false, 1.55));
+  EXPECT_FALSE(gate.update(neutral, mapping, true, 1.60));
+  EXPECT_TRUE(gate.update(motion, mapping, true, 1.65));
+
+  auto invalid = motion;
+  invalid[0] = std::numeric_limits<float>::quiet_NaN();
+  EXPECT_FALSE(gate.update(invalid, mapping, true, 1.70));
+  EXPECT_FALSE(gate.update(motion, mapping, true, 1.75));
 }
 
 }  // namespace

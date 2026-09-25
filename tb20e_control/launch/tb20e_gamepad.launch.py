@@ -49,7 +49,7 @@ def generate_launch_description():
         DeclareLaunchArgument("boom_scale", default_value="100.0"),
         DeclareLaunchArgument("deadzone", default_value="0.10"),
         DeclareLaunchArgument("joy_timeout_sec", default_value="0.25"),
-        DeclareLaunchArgument("deadman_button", default_value="-1"),
+        DeclareLaunchArgument("neutral_hold_sec", default_value="0.5"),
         DeclareLaunchArgument("command_output_enabled", default_value="true"),
         DeclareLaunchArgument(
             "unity_position_output_enabled", default_value="false"
@@ -122,7 +122,7 @@ def generate_launch_description():
             "boom_scale": _double_parameter("boom_scale"),
             "deadzone": _double_parameter("deadzone"),
             "joy_timeout_sec": _double_parameter("joy_timeout_sec"),
-            "deadman_button": _integer_parameter("deadman_button"),
+            "neutral_hold_sec": _double_parameter("neutral_hold_sec"),
             "publish_rate": 20.0,
             "unity_position_output_enabled": _boolean_parameter(
                 "unity_position_output_enabled"

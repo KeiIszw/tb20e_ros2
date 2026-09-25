@@ -115,19 +115,21 @@ armはゲームパッドの上方向と機体の正方向を合わせるため�
 | `<axis>_scale` | armのみ`-100.0`、他は`100.0` | 最大操作率と方向 |
 | `deadzone` | `0.10` | stick中央の無効範囲 |
 | `joy_timeout_sec` | `0.25` | Joy途絶時に0へ戻す時間 |
-| `deadman_button` | `-1` | 押下を要求するbutton番号。`-1`は無効 |
+| `neutral_hold_sec` | `0.5` | 操作開始前に全軸を中央で維持する時間 |
 | `joy_device_id` | `0` | `joy_node`のdevice ID |
+
+DモードのF310では接続直後に軸0～3が一時的に最大入力として見える場合があります。
+起動・再接続後は全スティックを中央に戻し、button 9（Start）を離した状態で0.5秒待ってから
+Startを一度押してください。押した次のJoyメッセージから操作を受け付けます。
+Startをもう一度押すとスティック位置に関係なく指令は0になります。再開時はStartを離し、
+スティックを中央で0.5秒維持してから押してください。Joy入力が途絶える、または入力形式が
+不正になる場合も停止します。button番号は`jstest --event /dev/input/js0`で確認できます。
+Start（button 9）は固定の開始・停止ボタンです。
 
 入力確認:
 
 ```bash
 ros2 topic echo /joy
-```
-
-例としてbutton 4をdeadmanに指定する場合:
-
-```bash
-ros2 launch tb20e_control tb20e_gamepad.launch.py deadman_button:=4
 ```
 
 `tb20e_control.launch.py`と`tb20e_gamepad.launch.py`を同時起動しないでください。

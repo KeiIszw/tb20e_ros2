@@ -36,6 +36,9 @@ source install/setup.bash
 ## 実行
 
 最初は実機出力を無効にしてtopicと方向を確認します。
+F310のDモードでは、スティックを中央に戻してbutton 9（Start）を離したまま0.5秒待ち、
+Startを一度押すと操作可能になります。もう一度押すと指令が0になり停止します。
+再開時はスティックを中央に戻してから押してください。
 
 ```bash
 ros2 launch tb20e_bringup tb20e_real_unity.launch.py \
