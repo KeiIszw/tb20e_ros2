@@ -97,3 +97,9 @@
     bucket_lever_negative_min: 38.0
     bucket_lever_start: 2.0
     bucket_lever_stop: 1.0
+# HTTP Action completion tolerances for all four axes (degrees, not radians).
+# These override constraints.<joint>.goal / stopped_velocity_tolerance for HTTP goals.
+/**/scratch_hci_bridge:
+  ros__parameters:
+    trajectory_goal_tolerance_deg: 0.75
+    trajectory_stopped_velocity_deg_s: 0.5

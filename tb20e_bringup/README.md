@@ -195,3 +195,22 @@ Activation refused: all four angle topics must provide fresh feedback within 2.0
 - ゲームパッドとHTTPを同時に4軸指令源として使用しないでください。
 - Unityでは同じ関節にレバー制御と位置制御を同時適用しないでください。
 - software timeoutやclampは実機の安全機構の代わりにはなりません。
+
+### HTTPコマンドの到達許容差
+
+`tb20e_real_unity.launch.py` は `controllers_file` として指定した
+`tb20e_controllers_*.yaml` の次の設定をHTTPブリッジに渡します。
+
+```yaml
+/**/scratch_hci_bridge:
+  ros__parameters:
+    trajectory_goal_tolerance_deg: 0.75
+    trajectory_stopped_velocity_deg_s: 0.5
+```
+
+位置は度、停止速度は度/秒で、全4軸に共通です。正の有限値を指定してください。
+変更後は起動一式を再起動します。YAMLの値変更だけなら再ビルド不要です。
+HTTP Actionでは、この指定がコントローラの `constraints.<joint>.goal`（rad）と
+`stopped_velocity_tolerance`（rad/s）より優先されます。設定がない旧YAMLでは
+従来の0.75度・0.5度/秒を使います。許容差はAction完了条件であり、
+その範囲でレバー出力を強制的にゼロにする設定ではありません。

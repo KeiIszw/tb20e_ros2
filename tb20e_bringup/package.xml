@@ -13,6 +13,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <exec_depend>launch</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
   <exec_depend>scratch_hci_bridge</exec_depend>
   <exec_depend>tb20e_control</exec_depend>
 

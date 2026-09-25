@@ -13,8 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
+
+import yaml
+
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument, GroupAction, IncludeLaunchDescription,
+    OpaqueFunction, SetLaunchConfiguration,
+)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
@@ -33,6 +40,31 @@ def _is_source(name):
             ["'", LaunchConfiguration("input_source"), "' == '", name, "'"]
         )
     )
+
+
+HTTP_TOLERANCE_DEFAULTS = {
+    "trajectory_goal_tolerance_deg": 0.75,
+    "trajectory_stopped_velocity_deg_s": 0.5,
+}
+
+
+def load_http_tolerances(context):
+    """Read action tolerances from the selected controller tuning file."""
+    path = LaunchConfiguration("controllers_file").perform(context)
+    with open(path, encoding="utf-8") as stream:
+        document = yaml.safe_load(stream)
+    values = document.get("/**/scratch_hci_bridge", {}).get("ros__parameters", {})
+    if not isinstance(values, dict):
+        raise ValueError("scratch_hci_bridge.ros__parameters must be a mapping")
+    actions = []
+    for name, default in HTTP_TOLERANCE_DEFAULTS.items():
+        value = values.get(name, default)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"{name} must be a positive finite number")
+        if not math.isfinite(value) or value <= 0.0:
+            raise ValueError(f"{name} must be a positive finite number")
+        actions.append(SetLaunchConfiguration("http_" + name, str(float(value))))
+    return actions
 
 
 def generate_launch_description():
@@ -226,6 +258,12 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
+            "trajectory_goal_tolerance_deg": LaunchConfiguration(
+                "http_trajectory_goal_tolerance_deg"
+            ),
+            "trajectory_stopped_velocity_deg_s": LaunchConfiguration(
+                "http_trajectory_stopped_velocity_deg_s"
+            ),
             "http_host": LaunchConfiguration("http_host"),
             "http_port": LaunchConfiguration("http_port"),
             "unity_position_output_enabled": LaunchConfiguration(
@@ -309,6 +347,7 @@ def generate_launch_description():
             *remappings,
             gamepad,
             http_control,
+            OpaqueFunction(function=load_http_tolerances, condition=_is_source("http")),
             http_bridge,
             imu_to_sim,
         ]),
