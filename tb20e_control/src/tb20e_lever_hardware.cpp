@@ -345,7 +345,8 @@ hardware_interface::return_type Tb20eLeverHardware::read(
         velocity_fault[axis] = feedback_velocity_[axis].update(
           current_position, feedback_[axis].received_at,
           axis_configs_[axis].continuous, max_feedback_velocity_rad_s_,
-          feedback_velocity_jitter_tolerance_sec_);
+          feedback_velocity_jitter_tolerance_sec_,
+          feedback_velocity_limit_check_enabled_);
         velocity_states_[axis] = feedback_velocity_[axis].velocity();
       }
     }
@@ -485,6 +486,13 @@ bool Tb20eLeverHardware::load_hardware_parameters()
     return false;
   }
 
+  if (!parse_bool_parameter(
+      info_, "feedback_velocity_limit_check_enabled", false,
+      feedback_velocity_limit_check_enabled_))
+  {
+    return false;
+  }
+
   if (!parse_finite_double(info_, "state_timeout_sec", 0.1, state_timeout_sec_) ||
     state_timeout_sec_ <= 0.0)
   {
@@ -549,6 +557,13 @@ bool Tb20eLeverHardware::load_hardware_parameters()
       info_, prefix + "state_topic", axis.state_topic);
     axis.command_topic = string_parameter(
       info_, prefix + "command_topic", axis.command_topic);
+
+    if (!parse_bool_parameter(
+        info_, prefix + "feedback_limit_check_enabled", true,
+        axis.feedback_limit_check_enabled))
+    {
+      return false;
+    }
 
     if (!parse_finite_double(
         info_, prefix + "lever_sign", axis.lever_sign, axis.lever_sign) ||
@@ -880,7 +895,7 @@ void Tb20eLeverHardware::feedback_callback(
   if (config.continuous) {
     position_rad = math::wrap_to_pi(position_rad);
   } else {
-    if (math::position_outside_limits(
+    if (config.feedback_limit_check_enabled && math::position_outside_limits(
         position_rad,
         config.position_min_rad,
         config.position_max_rad,

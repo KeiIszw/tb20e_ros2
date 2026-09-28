@@ -7,6 +7,7 @@
   <xacro:arg name="feedback_limit_tolerance_deg" default="2.0"/>
   <xacro:arg name="max_feedback_velocity_deg_s" default="180.0"/>
   <xacro:arg name="feedback_velocity_jitter_tolerance_sec" default="0.03"/>
+  <xacro:arg name="feedback_velocity_limit_check_enabled" default="false"/>
   <xacro:arg name="command_output_enabled" default="true"/>
 
   <xacro:property name="boom_position_min_deg" value="-83.0"/>
@@ -36,6 +37,7 @@
   <xacro:arg name="boom_lever_negative_min" default="0.0"/>
   <xacro:arg name="boom_lever_start" default="2.0"/>
   <xacro:arg name="boom_lever_stop" default="1.0"/>
+  <xacro:arg name="boom_feedback_limit_check_enabled" default="false"/>
 
   <xacro:arg name="arm_state_topic" default="/current_arm_angle"/>
   <xacro:arg name="arm_command_topic" default="/manipulated_arm_lever"/>
@@ -46,6 +48,7 @@
   <xacro:arg name="arm_lever_negative_min" default="0.0"/>
   <xacro:arg name="arm_lever_start" default="2.0"/>
   <xacro:arg name="arm_lever_stop" default="1.0"/>
+  <xacro:arg name="arm_feedback_limit_check_enabled" default="false"/>
 
   <xacro:arg name="bucket_state_topic" default="/current_bucket_angle"/>
   <xacro:arg name="bucket_command_topic" default="/manipulated_bucket_lever"/>
@@ -56,6 +59,7 @@
   <xacro:arg name="bucket_lever_negative_min" default="0.0"/>
   <xacro:arg name="bucket_lever_start" default="2.0"/>
   <xacro:arg name="bucket_lever_stop" default="1.0"/>
+  <xacro:arg name="bucket_feedback_limit_check_enabled" default="false"/>
 
   <xacro:include filename="$(find tb20e_control)/urdf/tb20e.ros2_control.xacro"/>
 

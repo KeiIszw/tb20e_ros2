@@ -132,6 +132,18 @@ TEST(FeedbackVelocity, RealOverspeedStillTripsAndReactivationResetsBaseline)
   EXPECT_NEAR(estimator.velocity(), degrees_to_radians(40.0), 1e-10);
 }
 
+TEST(FeedbackVelocity, DisabledLimitCheckKeepsMeasuredVelocityWithoutFault)
+{
+  tb20e_control::FeedbackVelocity estimator;
+  const auto t = std::chrono::steady_clock::time_point{};
+  estimator.reset(0.0, t);
+  EXPECT_FALSE(
+    estimator.update(
+      degrees_to_radians(20.0), t + std::chrono::milliseconds(50), false,
+      degrees_to_radians(180.0), 0.03, false));
+  EXPECT_NEAR(estimator.velocity(), degrees_to_radians(400.0), 1e-10);
+}
+
 TEST(FeedbackVelocity, SwingWrapUsesShortestDistance)
 {
   tb20e_control::FeedbackVelocity estimator;

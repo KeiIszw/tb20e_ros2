@@ -40,7 +40,7 @@ public:
 
   bool update(
     double position, TimePoint stamp, bool continuous, double limit,
-    double jitter_tolerance_sec = 0.03)
+    double jitter_tolerance_sec = 0.03, bool limit_check_enabled = true)
   {
     if (stamp == stamp_) {
       return false;  // Same sample: retain velocity until fresh feedback arrives.
@@ -53,6 +53,13 @@ public:
     {
       velocity_ = 0.0;
       return true;
+    }
+    if (!limit_check_enabled) {
+      position_ = position;
+      stamp_ = stamp;
+      velocity_ = delta / dt;
+      excess_distance_ = 0.0;
+      return false;
     }
     // Unstamped TCP feedback can arrive in bursts. Carry excess travel across
     // samples, allowing only a bounded amount of receipt-time compression.

@@ -18,6 +18,7 @@
         <param name="feedback_limit_tolerance_deg">$(arg feedback_limit_tolerance_deg)</param>
         <param name="max_feedback_velocity_deg_s">$(arg max_feedback_velocity_deg_s)</param>
         <param name="feedback_velocity_jitter_tolerance_sec">$(arg feedback_velocity_jitter_tolerance_sec)</param>
+        <param name="feedback_velocity_limit_check_enabled">$(arg feedback_velocity_limit_check_enabled)</param>
         <param name="command_output_enabled">$(arg command_output_enabled)</param>
 
         <param name="swing_state_topic">$(arg swing_state_topic)</param>
@@ -39,6 +40,7 @@
         <param name="boom_lever_negative_min">$(arg boom_lever_negative_min)</param>
         <param name="boom_lever_start">$(arg boom_lever_start)</param>
         <param name="boom_lever_stop">$(arg boom_lever_stop)</param>
+        <param name="boom_feedback_limit_check_enabled">$(arg boom_feedback_limit_check_enabled)</param>
         <param name="boom_position_min_deg">${boom_position_min_deg}</param>
         <param name="boom_position_max_deg">${boom_position_max_deg}</param>
 
@@ -51,6 +53,7 @@
         <param name="arm_lever_negative_min">$(arg arm_lever_negative_min)</param>
         <param name="arm_lever_start">$(arg arm_lever_start)</param>
         <param name="arm_lever_stop">$(arg arm_lever_stop)</param>
+        <param name="arm_feedback_limit_check_enabled">$(arg arm_feedback_limit_check_enabled)</param>
         <param name="arm_position_min_deg">${arm_position_min_deg}</param>
         <param name="arm_position_max_deg">${arm_position_max_deg}</param>
 
@@ -63,6 +66,7 @@
         <param name="bucket_lever_negative_min">$(arg bucket_lever_negative_min)</param>
         <param name="bucket_lever_start">$(arg bucket_lever_start)</param>
         <param name="bucket_lever_stop">$(arg bucket_lever_stop)</param>
+        <param name="bucket_feedback_limit_check_enabled">$(arg bucket_feedback_limit_check_enabled)</param>
         <param name="bucket_position_min_deg">${bucket_position_min_deg}</param>
         <param name="bucket_position_max_deg">${bucket_position_max_deg}</param>
       </hardware>

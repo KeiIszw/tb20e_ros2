@@ -43,29 +43,33 @@
     allow_partial_joints_goal: false
     open_loop_control: false
 
-    # Output units are lever percent. These are safe starting values for simulation,
-    # not validated gains for a physical excavator.
+    # TB20e_1 HTTP tuning: only arm and bucket are allowed to actuate.
+    # Keep swing and boom in the trajectory state vector, but force their PID
+    # outputs to zero because scratch_hci_bridge currently sends four-joint goals.
     gains:
       swing_joint:
-        p: 2000.0
+        p: 500.0
         i: 0.0
         d: 0.0
         angle_wraparound: true
       boom_joint:
-        p: 2000.0
+        p: 400.0
         i: 0.0
         d: 0.0
       arm_joint:
-        p: 2000.0
+        p: 500.0
         i: 0.0
         d: 0.0
       bucket_joint:
-        p: 2000.0
+        p: 500.0
         i: 0.0
         d: 0.0
 
     constraints:
-      goal_time: 30.0
+      # A failed goal must not hold the serial HTTP queue for 30 seconds. Keep
+      # 10 seconds because a successful large bucket move has taken about
+      # 11.6 seconds including the nominal 3-second trajectory.
+      goal_time: 10.0
       stopped_velocity_tolerance: 0.05
       swing_joint:
         goal: 0.04
@@ -81,25 +85,29 @@
 # 0 disables compensation in that direction. Changes take effect after restart.
 /**/tb20e_lever_hardware:
   ros__parameters:
-    swing_lever_positive_min: 0.0
-    swing_lever_negative_min: 0.0
+    swing_lever_positive_min: 40.0
+    swing_lever_negative_min: 40.0
     swing_lever_start: 2.0
     swing_lever_stop: 1.0
-    boom_lever_positive_min: 0.0
-    boom_lever_negative_min: 0.0
+    boom_lever_positive_min: 40.0 # up
+    boom_lever_negative_min: 35.0 # down
     boom_lever_start: 2.0
     boom_lever_stop: 1.0
-    arm_lever_positive_min: 0.0
-    arm_lever_negative_min: 0.0
-    arm_lever_start: 2.0
-    arm_lever_stop: 1.0
+    arm_lever_positive_min: 40.0
+    arm_lever_negative_min: 40.0
+    # Stop minimum-output compensation before the tight target region. With
+    # P=500, start/stop 8/5 correspond to about 0.92/0.57 degree error.
+    arm_lever_start: 8.0
+    arm_lever_stop: 5.0
     bucket_lever_positive_min: 45.0
-    bucket_lever_negative_min: 38.0
-    bucket_lever_start: 2.0
-    bucket_lever_stop: 1.0
+    bucket_lever_negative_min: 40.0
+    bucket_lever_start: 8.0
+    bucket_lever_stop: 5.0
 # HTTP Action completion tolerances for all four axes (degrees, not radians).
 # These override constraints.<joint>.goal / stopped_velocity_tolerance for HTTP goals.
 /**/scratch_hci_bridge:
   ros__parameters:
-    trajectory_goal_tolerance_deg: 0.75
-    trajectory_stopped_velocity_deg_s: 0.5
+    # Real feedback previously settled with about 1.44 degree residual error;
+    # the old 0.75 degree / 0.5 degree/s limits caused 30-second stalls.
+    trajectory_goal_tolerance_deg: 5.0
+    trajectory_stopped_velocity_deg_s: 2.0

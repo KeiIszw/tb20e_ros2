@@ -61,8 +61,8 @@
         d: 0.0
       bucket_joint:
         p: 500.0
-        i: 3.0
-        d: 2.0
+        i: 0.0
+        d: 20.0
 
     constraints:
       goal_time: 30.0
@@ -93,8 +93,8 @@
     arm_lever_negative_min: 50.0
     arm_lever_start: 2.0
     arm_lever_stop: 1.0
-    bucket_lever_positive_min: 50.0
-    bucket_lever_negative_min: 45.0
+    bucket_lever_positive_min: 35.0
+    bucket_lever_negative_min: 35.0
     bucket_lever_start: 2.0
     bucket_lever_stop: 1.0
 

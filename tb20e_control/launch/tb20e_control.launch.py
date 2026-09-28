@@ -37,6 +37,7 @@ XACRO_ARGUMENT_DEFAULTS = {
     "feedback_limit_tolerance_deg": "2.0",
     "max_feedback_velocity_deg_s": "180.0",
     "feedback_velocity_jitter_tolerance_sec": "0.03",
+    "feedback_velocity_limit_check_enabled": "false",
     "command_output_enabled": "true",
     "swing_state_topic": "/TB20e_0/current_swing_angle",
     "swing_command_topic": "/TB20e_0/manipulated_swing_lever",
@@ -56,6 +57,7 @@ XACRO_ARGUMENT_DEFAULTS = {
     "boom_lever_negative_min": "0.0",
     "boom_lever_start": "2.0",
     "boom_lever_stop": "1.0",
+    "boom_feedback_limit_check_enabled": "false",
     "arm_state_topic": "/TB20e_0/current_arm_angle",
     "arm_command_topic": "/TB20e_0/manipulated_arm_lever",
     "arm_lever_sign": "1.0",
@@ -65,6 +67,7 @@ XACRO_ARGUMENT_DEFAULTS = {
     "arm_lever_negative_min": "0.0",
     "arm_lever_start": "2.0",
     "arm_lever_stop": "1.0",
+    "arm_feedback_limit_check_enabled": "false",
     "bucket_state_topic": "/TB20e_0/current_bucket_angle",
     "bucket_command_topic": "/TB20e_0/manipulated_bucket_lever",
     "bucket_lever_sign": "1.0",
@@ -74,6 +77,7 @@ XACRO_ARGUMENT_DEFAULTS = {
     "bucket_lever_negative_min": "0.0",
     "bucket_lever_start": "2.0",
     "bucket_lever_stop": "1.0",
+    "bucket_feedback_limit_check_enabled": "false",
 }
 
 

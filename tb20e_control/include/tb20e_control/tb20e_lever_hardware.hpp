@@ -97,6 +97,7 @@ private:
     double lever_start{2.0};
     double lever_stop{1.0};
     int active_direction{0};
+    bool feedback_limit_check_enabled{true};
   };
 
   struct FeedbackSample
@@ -138,6 +139,7 @@ private:
   double feedback_limit_tolerance_rad_{0.03490658503988659};
   double max_feedback_velocity_rad_s_{3.14159265358979323846};
   double feedback_velocity_jitter_tolerance_sec_{0.03};
+  bool feedback_velocity_limit_check_enabled_{false};
   bool command_output_enabled_{true};
 
   std::mutex feedback_mutex_;
