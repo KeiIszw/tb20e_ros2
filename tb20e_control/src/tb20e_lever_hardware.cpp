@@ -334,12 +334,14 @@ Tb20eLeverHardware::export_command_interfaces()
 hardware_interface::return_type Tb20eLeverHardware::read(
   const rclcpp::Time &, const rclcpp::Duration &)
 {
-  const auto now = std::chrono::steady_clock::now();
   const bool calculate_velocity = active_.load();
   std::array<bool, kAxisCount> velocity_fault{};
 
   {
     std::lock_guard<std::mutex> lock(feedback_mutex_);
+    // Sample the clock under the same lock as receipt timestamps: a callback
+    // must not publish a newer timestamp between clock sampling and inspection.
+    const auto now = std::chrono::steady_clock::now();
     for (std::size_t axis = 0; axis < kAxisCount; ++axis) {
       if (!feedback_[axis].received) {
         velocity_states_[axis] = 0.0;
@@ -386,14 +388,19 @@ hardware_interface::return_type Tb20eLeverHardware::read(
 hardware_interface::return_type Tb20eLeverHardware::write(
   const rclcpp::Time &, const rclcpp::Duration &)
 {
-  const auto now = std::chrono::steady_clock::now();
   std::array<bool, kAxisCount> fresh{};
   std::array<double, kAxisCount> feedback_positions{};
+  std::array<double, kAxisCount> feedback_ages{};
   {
     std::lock_guard<std::mutex> lock(feedback_mutex_);
+    // Sample the clock under the same lock as receipt timestamps: a callback
+    // must not publish a newer timestamp between clock sampling and inspection.
+    const auto now = std::chrono::steady_clock::now();
     for (std::size_t axis = 0; axis < kAxisCount; ++axis) {
       fresh[axis] = feedback_is_fresh(feedback_[axis], now);
       feedback_positions[axis] = feedback_[axis].position_rad;
+      feedback_ages[axis] = feedback_[axis].received ?
+        std::chrono::duration<double>(now - feedback_[axis].received_at).count() : -1.0;
     }
   }
 
@@ -462,8 +469,11 @@ hardware_interface::return_type Tb20eLeverHardware::write(
     if (is_active && !fresh[axis] && !stale_reported_[axis]) {
       RCLCPP_WARN(
         node_->get_logger(),
-        "%s feedback is missing or stale",
-        axis_configs_[axis].name.c_str());
+        "%s feedback is missing or stale: topic=%s, age=%.3f s "
+        "(-1 means missing), timeout=%.3f s, last_position=%.3f deg",
+        axis_configs_[axis].name.c_str(), axis_configs_[axis].state_topic.c_str(),
+        feedback_ages[axis], state_timeout_sec_,
+        feedback_positions[axis] / math::kDegreesToRadians);
       stale_reported_[axis] = true;
     } else if (!feedback_fault_latched_.load() && fresh[axis]) {
       stale_reported_[axis] = false;
