@@ -285,4 +285,17 @@ launchは `controllers_file` で指定されたYAMLを読み込みます。補�
 
 このhardware層は目標角度を受け取らないため、角度許容差による停止判定ではありません。
 PIDゲインやI項を変更した場合は、残留出力と開始・停止しきい値の関係を再調整します。
+
+### HTTP実行中の非対象軸停止
+
+`tb20e_real_unity.launch.py input_source:=http` では、HTTP bridgeが実行中の
+trajectoryに含まれる軸をbit maskでhardware層へ通知します。bit 0から順に
+`swing`, `boom`, `arm`, `bucket` です。hardware層はmask外の軸について、
+trajectory controllerが位置保持用のPID出力を生成していてもレバー出力を0にします。
+直列実行では対象の1軸だけ、並列実行では同一batchの対象軸だけが有効です。
+goal完了・拒否・送信失敗・bridge終了時には全bitを0にします。
+
+`active_axis_mask_topic` が空の通常起動およびgamepad起動ではmask制限を行わず、
+従来どおり全4軸のcontroller出力を許可します。
+
 100 msのフィードバック監視と故障ラッチは変更していません。

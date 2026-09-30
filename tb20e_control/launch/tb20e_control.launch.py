@@ -39,6 +39,7 @@ XACRO_ARGUMENT_DEFAULTS = {
     "feedback_velocity_jitter_tolerance_sec": "0.03",
     "feedback_velocity_limit_check_enabled": "false",
     "command_output_enabled": "true",
+    "active_axis_mask_topic": "",
     "swing_state_topic": "/TB20e_0/current_swing_angle",
     "swing_command_topic": "/TB20e_0/manipulated_swing_lever",
     "swing_lever_sign": "1.0",
@@ -81,13 +82,26 @@ XACRO_ARGUMENT_DEFAULTS = {
 }
 
 
-COMPENSATION_DEFAULTS = {
-    name: value for name, value in XACRO_ARGUMENT_DEFAULTS.items()
-    if name.endswith(("_lever_positive_min", "_lever_negative_min", "_lever_start", "_lever_stop"))
+LEVER_PARAMETER_SPECS = {}
+for axis in ("swing", "boom", "arm", "bucket"):
+    LEVER_PARAMETER_SPECS.update({
+        f"{axis}_lever_positive_max": (f"{axis}_lever_max", 100.0, 1.0),
+        f"{axis}_lever_negative_max": (f"{axis}_lever_min", 100.0, -1.0),
+        f"{axis}_lever_positive_min": (f"{axis}_lever_positive_min", 0.0, 1.0),
+        f"{axis}_lever_negative_min": (f"{axis}_lever_negative_min", 0.0, 1.0),
+        f"{axis}_lever_start": (f"{axis}_lever_start", 2.0, 1.0),
+        f"{axis}_lever_stop": (f"{axis}_lever_stop", 1.0, 1.0),
+    })
+
+AUTO_XACRO_ARGUMENTS = {
+    target for target, _, _ in LEVER_PARAMETER_SPECS.values()
+}
+MAXIMUM_ARGUMENTS = {
+    name for name in LEVER_PARAMETER_SPECS if name.endswith("_max")
 }
 
 
-def load_compensation(context):
+def load_lever_parameters(context):
     # Resolve the selected controller file at launch time; explicit CLI values win.
     path = LaunchConfiguration("controllers_file").perform(context)
     with open(path, encoding="utf-8") as stream:
@@ -95,20 +109,26 @@ def load_compensation(context):
     values = document.get("/**/tb20e_lever_hardware", {}).get("ros__parameters", {})
     if not isinstance(values, dict):
         raise ValueError("tb20e_lever_hardware.ros__parameters must be a mapping")
-    unknown = set(values) - set(COMPENSATION_DEFAULTS)
+    unknown = set(values) - set(LEVER_PARAMETER_SPECS)
     if unknown:
-        raise ValueError(f"Unknown lever compensation parameters: {sorted(unknown)}")
+        raise ValueError(f"Unknown lever parameters: {sorted(unknown)}")
     actions = []
-    for name, default in COMPENSATION_DEFAULTS.items():
-        if LaunchConfiguration(name).perform(context) != "auto":
+    for name, (target, default, multiplier) in LEVER_PARAMETER_SPECS.items():
+        if LaunchConfiguration(target).perform(context) != "auto":
             continue
-        value = values.get(name, default)
+        configured_value = LaunchConfiguration(name).perform(context)
+        value = (
+            values.get(name, default)
+            if configured_value == "auto" else configured_value
+        )
         if isinstance(value, bool):
             raise ValueError(f"{name} must be a finite number")
         value = float(value)
         if not math.isfinite(value):
             raise ValueError(f"{name} must be a finite number")
-        actions.append(SetLaunchConfiguration(name, str(value)))
+        if name in MAXIMUM_ARGUMENTS and value < 0.0:
+            raise ValueError(f"{name} must be a non-negative magnitude")
+        actions.append(SetLaunchConfiguration(target, str(multiplier * value)))
     return actions
 
 
@@ -131,9 +151,13 @@ def generate_launch_description():
     ]
     declared_arguments.extend(
         DeclareLaunchArgument(
-            name, default_value="auto" if name in COMPENSATION_DEFAULTS else value
+            name, default_value="auto" if name in AUTO_XACRO_ARGUMENTS else value
         )
         for name, value in XACRO_ARGUMENT_DEFAULTS.items()
+    )
+    declared_arguments.extend(
+        DeclareLaunchArgument(name, default_value="auto")
+        for name in sorted(MAXIMUM_ARGUMENTS)
     )
 
     xacro_command = [FindExecutable(name="xacro"), " ", xacro_file]
@@ -215,7 +239,7 @@ def generate_launch_description():
     return LaunchDescription(
         declared_arguments
         + [
-            OpaqueFunction(function=load_compensation),
+            OpaqueFunction(function=load_lever_parameters),
             robot_state_publisher,
             shutdown_on_control_exit,
             control_node,

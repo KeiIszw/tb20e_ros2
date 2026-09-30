@@ -60,12 +60,12 @@
         i: 0.0
         d: 0.0
       bucket_joint:
-        p: 500.0
+        p: 300.0
         i: 0.0
-        d: 20.0
+        d: 0.0
 
     constraints:
-      goal_time: 30.0
+      goal_time: 10.0
       stopped_velocity_tolerance: 0.05
       swing_joint:
         goal: 0.04
@@ -76,31 +76,39 @@
       bucket_joint:
         goal: 0.04
 
-# Hardware lever compensation, read by the control launch from this same file.
+# Hardware lever limits and compensation, read by the control launch from this file.
 # Positive/negative refer to the published lever sign; enter positive magnitudes.
-# 0 disables compensation in that direction. Changes take effect after restart.
+# A zero minimum disables compensation in that direction. Changes require restart.
 /**/tb20e_lever_hardware:
   ros__parameters:
-    swing_lever_positive_min: 50.0
-    swing_lever_negative_min: 50.0
+    swing_lever_positive_max: 100.0
+    swing_lever_negative_max: 100.0
+    swing_lever_positive_min: 40.0
+    swing_lever_negative_min: 40.0
     swing_lever_start: 2.0
     swing_lever_stop: 1.0
-    boom_lever_positive_min: 0.0
-    boom_lever_negative_min: 0.0
+    boom_lever_positive_max: 100.0
+    boom_lever_negative_max: 100.0
+    boom_lever_positive_min: 40.0
+    boom_lever_negative_min: 35.0
     boom_lever_start: 2.0
     boom_lever_stop: 1.0
-    arm_lever_positive_min: 50.0
-    arm_lever_negative_min: 50.0
-    arm_lever_start: 2.0
-    arm_lever_stop: 1.0
-    bucket_lever_positive_min: 35.0
-    bucket_lever_negative_min: 35.0
-    bucket_lever_start: 2.0
-    bucket_lever_stop: 1.0
+    arm_lever_positive_max: 100.0
+    arm_lever_negative_max: 100.0
+    arm_lever_positive_min: 40.0
+    arm_lever_negative_min: 40.0
+    arm_lever_start: 8.0
+    arm_lever_stop: 5.0
+    bucket_lever_positive_max: 60.0
+    bucket_lever_negative_max: 70.0
+    bucket_lever_positive_min: 45.0
+    bucket_lever_negative_min: 40.0
+    bucket_lever_start: 8.0
+    bucket_lever_stop: 5.0
 
 # HTTP Action completion tolerances for all four axes (degrees, not radians).
 # These override constraints.<joint>.goal / stopped_velocity_tolerance for HTTP goals.
 /**/scratch_hci_bridge:
   ros__parameters:
-    trajectory_goal_tolerance_deg: 0.75
-    trajectory_stopped_velocity_deg_s: 0.5
+    trajectory_goal_tolerance_deg: 5.0
+    trajectory_stopped_velocity_deg_s: 2.0

@@ -140,12 +140,13 @@ def generate_launch_description():
         DeclareLaunchArgument("bucket_unity_position_sign", default_value="1.0"),
     ]
 
-    compensation_defaults = {
+    lever_parameter_defaults = {
+        "lever_positive_max": "auto", "lever_negative_max": "auto",
         "lever_positive_min": "auto", "lever_negative_min": "auto",
         "lever_start": "auto", "lever_stop": "auto",
     }
     for axis in ("swing", "boom", "arm", "bucket"):
-        for suffix, default in compensation_defaults.items():
+        for suffix, default in lever_parameter_defaults.items():
             arguments.append(DeclareLaunchArgument(f"{axis}_{suffix}", default_value=default))
 
     common_hardware_arguments = {
@@ -159,7 +160,7 @@ def generate_launch_description():
     }
 
     for axis in ("swing", "boom", "arm", "bucket"):
-        for suffix in compensation_defaults:
+        for suffix in lever_parameter_defaults:
             name = f"{axis}_{suffix}"
             common_hardware_arguments[name] = LaunchConfiguration(name)
 
@@ -241,6 +242,9 @@ def generate_launch_description():
 
     http_control_arguments = dict(common_hardware_arguments)
     http_control_arguments["controller_name"] = "tb20e_controller"
+    http_control_arguments["active_axis_mask_topic"] = (
+        ["/", robot_namespace, "/http_active_axis_mask"]
+    )
     http_control = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -279,6 +283,9 @@ def generate_launch_description():
             ),
             "direct_joint_command_prefix": LaunchConfiguration(
                 "unity_position_command_prefix"
+            ),
+            "active_axis_mask_topic": (
+                ["/", robot_namespace, "/http_active_axis_mask"]
             ),
             "swing_unity_position_sign": LaunchConfiguration(
                 "swing_unity_position_sign"

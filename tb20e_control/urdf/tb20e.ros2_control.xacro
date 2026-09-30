@@ -20,6 +20,7 @@
         <param name="feedback_velocity_jitter_tolerance_sec">$(arg feedback_velocity_jitter_tolerance_sec)</param>
         <param name="feedback_velocity_limit_check_enabled">$(arg feedback_velocity_limit_check_enabled)</param>
         <param name="command_output_enabled">$(arg command_output_enabled)</param>
+        <param name="active_axis_mask_topic">$(arg active_axis_mask_topic)</param>
 
         <param name="swing_state_topic">$(arg swing_state_topic)</param>
         <param name="swing_command_topic">$(arg swing_command_topic)</param>

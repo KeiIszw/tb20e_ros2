@@ -20,6 +20,7 @@
 #include <chrono>
 #include <cstddef>
 #include <condition_variable>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -36,6 +37,7 @@
 #include "rclcpp/subscription.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "std_msgs/msg/float64.hpp"
+#include "std_msgs/msg/u_int8.hpp"
 
 namespace tb20e_control
 {
@@ -121,6 +123,8 @@ private:
   void publish_zero_to_all_axes_locked();
   void feedback_callback(
     std::size_t axis, const std_msgs::msg::Float64::ConstSharedPtr & message);
+  void active_axis_mask_callback(
+    const std_msgs::msg::UInt8::ConstSharedPtr & message);
   bool feedback_is_fresh(
     const FeedbackSample & sample,
     const std::chrono::steady_clock::time_point & now) const;
@@ -141,18 +145,21 @@ private:
   double feedback_velocity_jitter_tolerance_sec_{0.03};
   bool feedback_velocity_limit_check_enabled_{false};
   bool command_output_enabled_{true};
+  std::string active_axis_mask_topic_;
 
   std::mutex feedback_mutex_;
   std::condition_variable feedback_condition_;
   std::mutex command_publish_mutex_;
   std::atomic<bool> active_{false};
   std::atomic<bool> feedback_fault_latched_{false};
+  std::atomic<std::uint8_t> active_axis_mask_{0x0F};
 
   rclcpp::Node::SharedPtr node_;
   std::array<rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr, kAxisCount>
   command_publishers_{};
   std::array<rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr, kAxisCount>
   state_subscriptions_{};
+  rclcpp::Subscription<std_msgs::msg::UInt8>::SharedPtr active_axis_mask_subscription_;
   std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> executor_;
   std::thread executor_thread_;
 };

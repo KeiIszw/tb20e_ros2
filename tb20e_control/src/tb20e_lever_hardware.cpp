@@ -148,6 +148,7 @@ hardware_interface::CallbackReturn Tb20eLeverHardware::on_init(
   }
   stale_reported_.fill(false);
   feedback_fault_latched_.store(false);
+  active_axis_mask_.store(active_axis_mask_topic_.empty() ? 0x0F : 0x00);
 
   node_ = std::make_shared<rclcpp::Node>("tb20e_lever_hardware");
   const auto state_qos = rclcpp::SensorDataQoS().keep_last(10);
@@ -161,6 +162,14 @@ hardware_interface::CallbackReturn Tb20eLeverHardware::on_init(
       state_qos,
       [this, axis](const std_msgs::msg::Float64::ConstSharedPtr message) {
         feedback_callback(axis, message);
+      });
+  }
+  if (!active_axis_mask_topic_.empty()) {
+    const auto mask_qos = rclcpp::QoS(rclcpp::KeepLast(1)).reliable().transient_local();
+    active_axis_mask_subscription_ = node_->create_subscription<std_msgs::msg::UInt8>(
+      active_axis_mask_topic_, mask_qos,
+      [this](const std_msgs::msg::UInt8::ConstSharedPtr message) {
+        active_axis_mask_callback(message);
       });
   }
 
@@ -410,6 +419,7 @@ hardware_interface::return_type Tb20eLeverHardware::write(
 
   std::lock_guard<std::mutex> publish_lock(command_publish_mutex_);
   bool publish_failed = false;
+  const std::uint8_t active_axis_mask = active_axis_mask_.load();
   for (std::size_t axis = 0; axis < kAxisCount; ++axis) {
     double lever_command = 0.0;
     const double controller_command = effort_commands_[axis];
@@ -426,7 +436,9 @@ hardware_interface::return_type Tb20eLeverHardware::write(
           config.position_max_rad - kEndStopGuardRadians);
       }
 
-      if (!moves_outside_end_stop) {
+      const bool axis_enabled =
+        (active_axis_mask & (static_cast<std::uint8_t>(1U) << axis)) != 0U;
+      if (axis_enabled && !moves_outside_end_stop) {
         lever_command = math::bounded_lever_command(
           controller_command,
           config.lever_sign,
@@ -435,7 +447,7 @@ hardware_interface::return_type Tb20eLeverHardware::write(
         lever_command = math::compensated_lever_command(
           lever_command, config.lever_positive_min, config.lever_negative_min,
           config.lever_start, config.lever_stop, config.active_direction);
-      } else {
+      } else if (moves_outside_end_stop) {
         RCLCPP_WARN_THROTTLE(
           node_->get_logger(), *node_->get_clock(), 2000,
           "Suppressing %s command at its configured joint limit",
@@ -480,6 +492,7 @@ hardware_interface::return_type Tb20eLeverHardware::write(
 
 bool Tb20eLeverHardware::load_hardware_parameters()
 {
+  active_axis_mask_topic_ = string_parameter(info_, "active_axis_mask_topic", "");
   if (!parse_bool_parameter(
       info_, "command_output_enabled", true, command_output_enabled_))
   {
@@ -924,6 +937,14 @@ void Tb20eLeverHardware::feedback_callback(
     sample.received_at = now;
   }
   feedback_condition_.notify_all();
+}
+
+void Tb20eLeverHardware::active_axis_mask_callback(
+  const std_msgs::msg::UInt8::ConstSharedPtr & message)
+{
+  constexpr std::uint8_t kAllAxesMask =
+    (static_cast<std::uint8_t>(1U) << kAxisCount) - 1U;
+  active_axis_mask_.store(message->data & kAllAxesMask);
 }
 
 bool Tb20eLeverHardware::feedback_is_fresh(
