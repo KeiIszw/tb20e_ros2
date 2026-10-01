@@ -48,9 +48,9 @@
     # outputs to zero because scratch_hci_bridge currently sends four-joint goals.
     gains:
       swing_joint:
-        p: 400.0
+        p: 300.0
         i: 0.0
-        d: 0.0
+        d: 100.0
         angle_wraparound: true
       boom_joint:
         p: 400.0
@@ -69,7 +69,7 @@
       # A failed goal must not hold the serial HTTP queue for 30 seconds. Keep
       # 10 seconds because a successful large bucket move has taken about
       # 11.6 seconds including the nominal 3-second trajectory.
-      goal_time: 10.0
+      goal_time: 8.0
       stopped_velocity_tolerance: 0.05
       swing_joint:
         goal: 0.04
