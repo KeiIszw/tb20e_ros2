@@ -60,7 +60,7 @@
         i: 0.0
         d: 0.0
       bucket_joint:
-        p: 300.0
+        p: 200.0
         i: 0.0
         d: 0.0
 
@@ -87,7 +87,7 @@
     swing_lever_negative_min: 40.0
     swing_lever_start: 2.0
     swing_lever_stop: 1.0
-    boom_lever_positive_max: 100.0
+    boom_lever_positive_max: 70.0
     boom_lever_negative_max: 100.0
     boom_lever_positive_min: 40.0
     boom_lever_negative_min: 35.0
@@ -110,5 +110,5 @@
 # These override constraints.<joint>.goal / stopped_velocity_tolerance for HTTP goals.
 /**/scratch_hci_bridge:
   ros__parameters:
-    trajectory_goal_tolerance_deg: 5.0
+    trajectory_goal_tolerance_deg: 3.0
     trajectory_stopped_velocity_deg_s: 2.0

@@ -48,7 +48,7 @@
     # outputs to zero because scratch_hci_bridge currently sends four-joint goals.
     gains:
       swing_joint:
-        p: 500.0
+        p: 400.0
         i: 0.0
         d: 0.0
         angle_wraparound: true
@@ -61,7 +61,7 @@
         i: 0.0
         d: 0.0
       bucket_joint:
-        p: 400.0
+        p: 300.0
         i: 0.0
         d: 0.0
 
@@ -115,5 +115,5 @@
   ros__parameters:
     # Real feedback previously settled with about 1.44 degree residual error;
     # the old 0.75 degree / 0.5 degree/s limits caused 30-second stalls.
-    trajectory_goal_tolerance_deg: 5.0
+    trajectory_goal_tolerance_deg: 3.0
     trajectory_stopped_velocity_deg_s: 2.0
