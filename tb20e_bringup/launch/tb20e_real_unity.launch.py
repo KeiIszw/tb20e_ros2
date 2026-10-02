@@ -42,14 +42,15 @@ def _is_source(name):
     )
 
 
-HTTP_TOLERANCE_DEFAULTS = {
+HTTP_PARAMETER_DEFAULTS = {
+    **{f"{joint}_default_speed_deg_s": 0.0 for joint in ("swing", "boom", "arm", "bucket")},
     "trajectory_goal_tolerance_deg": 0.75,
     "trajectory_stopped_velocity_deg_s": 0.5,
 }
 
 
-def load_http_tolerances(context):
-    """Read action tolerances from the selected controller tuning file."""
+def load_http_parameters(context):
+    """Read HTTP defaults and action tolerances from the controller tuning file."""
     path = LaunchConfiguration("controllers_file").perform(context)
     with open(path, encoding="utf-8") as stream:
         document = yaml.safe_load(stream)
@@ -57,12 +58,18 @@ def load_http_tolerances(context):
     if not isinstance(values, dict):
         raise ValueError("scratch_hci_bridge.ros__parameters must be a mapping")
     actions = []
-    for name, default in HTTP_TOLERANCE_DEFAULTS.items():
+    for name, default in HTTP_PARAMETER_DEFAULTS.items():
         value = values.get(name, default)
-        if isinstance(value, bool) or not isinstance(value, (int, float)):
-            raise ValueError(f"{name} must be a positive finite number")
-        if not math.isfinite(value) or value <= 0.0:
-            raise ValueError(f"{name} must be a positive finite number")
+        allows_zero = name.endswith("_default_speed_deg_s")
+        requirement = "non-negative" if allows_zero else "positive"
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            or value < 0.0
+            or (value == 0.0 and not allows_zero)
+        ):
+            raise ValueError(f"{name} must be a {requirement} finite number")
         actions.append(SetLaunchConfiguration("http_" + name, str(float(value))))
     return actions
 
@@ -262,6 +269,12 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
+            **{
+                f"{joint}_default_speed_deg_s": LaunchConfiguration(
+                    f"http_{joint}_default_speed_deg_s"
+                )
+                for joint in ("swing", "boom", "arm", "bucket")
+            },
             "trajectory_goal_tolerance_deg": LaunchConfiguration(
                 "http_trajectory_goal_tolerance_deg"
             ),
@@ -354,7 +367,7 @@ def generate_launch_description():
             *remappings,
             gamepad,
             http_control,
-            OpaqueFunction(function=load_http_tolerances, condition=_is_source("http")),
+            OpaqueFunction(function=load_http_parameters, condition=_is_source("http")),
             http_bridge,
             imu_to_sim,
         ]),

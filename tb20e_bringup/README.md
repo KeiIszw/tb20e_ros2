@@ -214,3 +214,21 @@ HTTP Actionでは、この指定がコントローラの `constraints.<joint>.go
 `stopped_velocity_tolerance`（rad/s）より優先されます。設定がない旧YAMLでは
 従来の0.75度・0.5度/秒を使います。許容差はAction完了条件であり、
 その範囲でレバー出力を強制的にゼロにする設定ではありません。
+
+### HTTP操作のデフォルト速度
+
+`tb20e_controllers_*.yaml` の `/**/scratch_hci_bridge.ros__parameters` で
+各軸の初期速度を度/秒で指定できます。例えば次の設定は4軸をそれぞれ5度/秒にします。
+
+```yaml
+    swing_default_speed_deg_s: 5.0
+    boom_default_speed_deg_s: 5.0
+    arm_default_speed_deg_s: 5.0
+    bucket_default_speed_deg_s: 5.0
+```
+
+既定値の `0.0` または省略時は、従来の `trajectory_duration_sec`（3秒）で移動します。
+正の速度を設定した場合、移動時間は現在角から目標角までの角度差÷速度です。
+これは軌道の目標速度であり、実機の速度は追従状態に依存します。
+HTTPの `<axis>_speed` コマンドでその軸の速度を上書きできます。
+HTTPで速度に `0` を送ると移動時間による動作に戻ります。設定変更後は再起動してください。

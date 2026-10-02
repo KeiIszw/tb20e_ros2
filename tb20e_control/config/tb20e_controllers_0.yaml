@@ -110,5 +110,10 @@
 # These override constraints.<joint>.goal / stopped_velocity_tolerance for HTTP goals.
 /**/scratch_hci_bridge:
   ros__parameters:
+    # Default HTTP motion speeds (deg/s). Zero uses trajectory_duration_sec.
+    swing_default_speed_deg_s: 50.0
+    boom_default_speed_deg_s: 50.0
+    arm_default_speed_deg_s: 60.0
+    bucket_default_speed_deg_s: 60.0
     trajectory_goal_tolerance_deg: 3.0
     trajectory_stopped_velocity_deg_s: 2.0

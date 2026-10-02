@@ -115,5 +115,10 @@
   ros__parameters:
     # Real feedback previously settled with about 1.44 degree residual error;
     # the old 0.75 degree / 0.5 degree/s limits caused 30-second stalls.
+    # Default HTTP motion speeds (deg/s). Zero uses trajectory_duration_sec.
+    swing_default_speed_deg_s: 50.0
+    boom_default_speed_deg_s: 50.0
+    arm_default_speed_deg_s: 60.0
+    bucket_default_speed_deg_s: 60.0
     trajectory_goal_tolerance_deg: 3.0
     trajectory_stopped_velocity_deg_s: 2.0
