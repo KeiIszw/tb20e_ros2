@@ -97,6 +97,26 @@ PIDゲインは`config/tb20e_controllers_0.yaml`（0号機）と
 ros2 launch tb20e_control tb20e_gamepad.launch.py
 ```
 
+デッドゾーンは`config/tb20e_controllers_0.yaml`または
+`config/tb20e_controllers_1.yaml`の次の箇所で設定します（4軸共通）。
+
+```yaml
+/**/tb20e_gamepad:
+  ros__parameters:
+    deadzone: 0.10
+```
+
+範囲は`0 <= deadzone < 1`で、変更後はゲームパッドlaunchを再起動してください。
+既定では0号機のYAMLを読みます。1号機のYAMLを選択する場合:
+
+```bash
+ros2 launch tb20e_control tb20e_gamepad.launch.py \
+  controllers_file:=$(ros2 pkg prefix --share tb20e_control)/config/tb20e_controllers_1.yaml
+```
+
+起動引数`deadzone:=0.15`などを指定するとYAMLより優先されます。
+YAMLに設定がない場合は`0.10`を使用します。
+
 既定の割当:
 
 | 入力 | 軸 | Joy axis | scale |
@@ -113,7 +133,7 @@ armはゲームパッドの上方向と機体の正方向を合わせるため�
 |---|---:|---|
 | `<axis>_axis` | swing=0, arm=1, bucket=2, boom=3 | Joy axis番号 |
 | `<axis>_scale` | armのみ`-100.0`、他は`100.0` | 最大操作率と方向 |
-| `deadzone` | `0.10` | stick中央の無効範囲 |
+| `deadzone` | `auto` | YAMLの値を使用。数値指定で上書き |
 | `joy_timeout_sec` | `0.25` | Joy途絶時に0へ戻す時間 |
 | `neutral_hold_sec` | `0.5` | 操作開始前に全軸を中央で維持する時間 |
 | `joy_device_id` | `0` | `joy_node`のdevice ID |

@@ -13,8 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
+
+import yaml
+
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction,
+    SetLaunchConfiguration,
+)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -34,10 +41,33 @@ def _boolean_parameter(name):
     return ParameterValue(LaunchConfiguration(name), value_type=bool)
 
 
+def load_deadzone(context):
+    value = LaunchConfiguration("deadzone").perform(context)
+    if value == "auto":
+        path = LaunchConfiguration("controllers_file").perform(context)
+        with open(path, encoding="utf-8") as stream:
+            document = yaml.safe_load(stream)
+        value = document.get("/**/tb20e_gamepad", {}).get(
+            "ros__parameters", {}
+        ).get("deadzone", 0.10)
+    if isinstance(value, bool):
+        raise ValueError("deadzone must satisfy 0 <= deadzone < 1")
+    value = float(value)
+    if not math.isfinite(value) or not 0.0 <= value < 1.0:
+        raise ValueError("deadzone must satisfy 0 <= deadzone < 1")
+    return [SetLaunchConfiguration("deadzone", str(value))]
+
+
 def generate_launch_description():
     package_share = FindPackageShare("tb20e_control")
 
     arguments = [
+        DeclareLaunchArgument(
+            "controllers_file",
+            default_value=PathJoinSubstitution(
+                [package_share, "config", "tb20e_controllers_0.yaml"]
+            ),
+        ),
         DeclareLaunchArgument("joy_device_id", default_value="0"),
         DeclareLaunchArgument("swing_axis", default_value="0"),
         DeclareLaunchArgument("arm_axis", default_value="1"),
@@ -47,7 +77,7 @@ def generate_launch_description():
         DeclareLaunchArgument("arm_scale", default_value="-100.0"),
         DeclareLaunchArgument("bucket_scale", default_value="100.0"),
         DeclareLaunchArgument("boom_scale", default_value="100.0"),
-        DeclareLaunchArgument("deadzone", default_value="0.10"),
+        DeclareLaunchArgument("deadzone", default_value="auto"),
         DeclareLaunchArgument("joy_timeout_sec", default_value="0.25"),
         DeclareLaunchArgument("neutral_hold_sec", default_value="0.5"),
         DeclareLaunchArgument("command_output_enabled", default_value="true"),
@@ -101,6 +131,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             "controller_name": "tb20e_gamepad_controller",
+            "controllers_file": LaunchConfiguration("controllers_file"),
             "command_output_enabled": LaunchConfiguration(
                 "command_output_enabled"
             ),
@@ -189,4 +220,6 @@ def generate_launch_description():
         }],
     )
 
-    return LaunchDescription(arguments + [gamepad, joy, control])
+    return LaunchDescription(
+        arguments + [OpaqueFunction(function=load_deadzone), gamepad, joy, control]
+    )

@@ -16,6 +16,12 @@
     tb20e_gamepad_controller:
       type: forward_command_controller/ForwardCommandController
 
+# Gamepad stick deadzone, shared by all four axes (0 <= deadzone < 1).
+# Changes take effect after restarting the gamepad launch.
+/**/tb20e_gamepad:
+  ros__parameters:
+    deadzone: 0.30
+
 /**/tb20e_gamepad_controller:
   ros__parameters:
     joints:
