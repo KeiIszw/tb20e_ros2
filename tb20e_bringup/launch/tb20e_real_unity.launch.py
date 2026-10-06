@@ -171,8 +171,8 @@ def generate_launch_description():
             name = f"{axis}_{suffix}"
             common_hardware_arguments[name] = LaunchConfiguration(name)
 
-    # The gamepad include uses the common control launch; explicitly select
-    # this robot's actuator topics as well as its feedback topics.
+    # ゲームパッドの読み込み処理は共通の制御起動処理を使うため、
+    # このロボットの駆動トピックとフィードバックトピックを明示的に選択する。
     common_hardware_arguments["frame_prefix"] = [robot_namespace, "/"]
     for axis in ("swing", "boom", "arm", "bucket"):
         common_hardware_arguments[f"{axis}_command_topic"] = (
@@ -353,7 +353,7 @@ def generate_launch_description():
         }],
     )
 
-    # The gamepad node uses absolute names; scope these explicitly too.
+    # ゲームパッドノードは絶対名を使うため、これらの名前の適用範囲も明示する。
     remappings = [
         SetRemap(src="/joy", dst=["/", robot_namespace, "/joy"]),
         SetRemap(

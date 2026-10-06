@@ -1,10 +1,10 @@
-# Controller tuning for TB20e_1.
+# TB20e_1のコントローラ調整値。
 # Copyright 2026 tb20e_ros2 contributors
 # SPDX-License-Identifier: Apache-2.0
 
 /**/controller_manager:
   ros__parameters:
-    # This rate also determines the lever publication period: 20 Hz = 50 ms.
+    # この頻度はレバー値の配信周期も決める。20Hzは50ミリ秒。
     update_rate: 20
 
     joint_state_broadcaster:
@@ -16,8 +16,8 @@
     tb20e_gamepad_controller:
       type: forward_command_controller/ForwardCommandController
 
-# Gamepad stick deadzone, shared by all four axes (0 <= deadzone < 1).
-# Changes take effect after restarting the gamepad launch.
+# 4軸共通のゲームパッドスティックの不感帯（0 <= deadzone < 1）。
+# 変更はゲームパッドの起動処理を再実行すると反映される。
 /**/tb20e_gamepad:
   ros__parameters:
     deadzone: 0.30
@@ -49,9 +49,7 @@
     allow_partial_joints_goal: false
     open_loop_control: false
 
-    # TB20e_1 HTTP tuning: only arm and bucket are allowed to actuate.
-    # Keep swing and boom in the trajectory state vector, but force their PID
-    # outputs to zero because scratch_hci_bridge currently sends four-joint goals.
+    # TB20e_1のHTTP調整値。出力単位はレバーのパーセント値。
     gains:
       swing_joint:
         p: 300.0
@@ -72,9 +70,6 @@
         d: 0.0
 
     constraints:
-      # A failed goal must not hold the serial HTTP queue for 30 seconds. Keep
-      # 10 seconds because a successful large bucket move has taken about
-      # 11.6 seconds including the nominal 3-second trajectory.
       goal_time: 8.0
       stopped_velocity_tolerance: 0.05
       swing_joint:
@@ -86,9 +81,9 @@
       bucket_joint:
         goal: 0.04
 
-# Hardware lever limits and compensation, read by the control launch from this file.
-# Positive/negative refer to the published lever sign; enter positive magnitudes.
-# A zero minimum disables compensation in that direction. Changes require restart.
+# 実機レバーの制限と補償値。制御起動処理がこのファイルから読み込む。
+# 正負は配信するレバー値の符号を指す。設定値には正の大きさを入力する。
+# 最小値を0にすると、その方向の補償を無効にする。変更後は再起動が必要。
 /**/tb20e_lever_hardware:
   ros__parameters:
     swing_lever_positive_max: 100.0
@@ -99,8 +94,8 @@
     swing_lever_stop: 1.0
     boom_lever_positive_max: 100.0
     boom_lever_negative_max: 100.0
-    boom_lever_positive_min: 40.0 # up
-    boom_lever_negative_min: 35.0 # down
+    boom_lever_positive_min: 40.0 # 上げる
+    boom_lever_negative_min: 35.0 # 下げる
     boom_lever_start: 2.0
     boom_lever_stop: 1.0
     arm_lever_positive_max: 100.0
@@ -111,20 +106,19 @@
     arm_lever_stop: 5.0
     bucket_lever_positive_max: 60.0
     bucket_lever_negative_max: 70.0
-    bucket_lever_positive_min: 45.0 # crowd
-    bucket_lever_negative_min: 40.0 # dump
+    bucket_lever_positive_min: 45.0 # すくう
+    bucket_lever_negative_min: 40.0 # はらう
     bucket_lever_start: 8.0
     bucket_lever_stop: 5.0
-# HTTP Action completion tolerances for all four axes (degrees, not radians).
-# These override constraints.<joint>.goal / stopped_velocity_tolerance for HTTP goals.
+
+# HTTPゴールではconstraints.<joint>.goalとstopped_velocity_toleranceを上書きする。
 /**/scratch_hci_bridge:
   ros__parameters:
-    # Real feedback previously settled with about 1.44 degree residual error;
-    # the old 0.75 degree / 0.5 degree/s limits caused 30-second stalls.
-    # Default HTTP motion speeds (deg/s). Zero uses trajectory_duration_sec.
+    # HTTP動作指令の既定速度（度/秒）。0の場合はtrajectory_duration_secを使用する。
     swing_default_speed_deg_s: 50.0
     boom_default_speed_deg_s: 50.0
     arm_default_speed_deg_s: 60.0
     bucket_default_speed_deg_s: 60.0
+    # 4軸共通のHTTPアクション完了許容誤差（単位は度）。
     trajectory_goal_tolerance_deg: 3.0
     trajectory_stopped_velocity_deg_s: 2.0

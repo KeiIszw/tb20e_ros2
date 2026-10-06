@@ -56,8 +56,8 @@ inline double bounded_lever_command(
   return std::clamp(lever_sign * controller_command, lever_min, lever_max);
 }
 
-// Thresholds are in bounded, signed lever percent, not joint angle.
-// A direction reversal must pass the start threshold again.
+// しきい値の単位は、制限済みの符号付きレバーパーセント値。
+// 方向を反転するときは、開始しきい値を再度超える必要がある。
 inline double compensated_lever_command(
   const double command, const double positive_min, const double negative_min,
   const double start, const double stop, int & active_direction)
@@ -118,7 +118,7 @@ inline bool velocity_exceeds_limit(
   return std::abs(position_delta / period_sec) > velocity_limit;
 }
 
-}  // namespace math
-}  // namespace tb20e_control
+}  // math名前空間
+}  // tb20e_control名前空間
 
 #endif  // TB20E_CONTROL__MATH_UTILS_HPP_

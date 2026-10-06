@@ -23,8 +23,8 @@
 namespace tb20e_control
 {
 
-// Float64 feedback has no source stamp; use steady-clock receipt times of
-// the two samples, never the controller-manager period (especially at startup).
+// Float64のフィードバックには送信元時刻がないため、2つのサンプルの
+// 定常時計による受信時刻を使う。特に起動時はコントローラ管理側の周期を使わない。
 class FeedbackVelocity
 {
 public:
@@ -43,7 +43,7 @@ public:
     double jitter_tolerance_sec = 0.03, bool limit_check_enabled = true)
   {
     if (stamp == stamp_) {
-      return false;  // Same sample: retain velocity until fresh feedback arrives.
+      return false;  // 同じサンプルの場合、新しいフィードバックが届くまで速度を保持する。
     }
     const double dt = std::chrono::duration<double>(stamp - stamp_).count();
     const double delta = continuous ? math::shortest_angular_delta(position, position_) :
@@ -61,10 +61,10 @@ public:
       excess_distance_ = 0.0;
       return false;
     }
-    // Unstamped TCP feedback can arrive in bursts. Carry excess travel across
-    // samples, allowing only a bounded amount of receipt-time compression.
-    // Slow/stationary periods repay excess but never bank unlimited credit.
-    // Absolute travel prevents reversals from cancelling an overspeed.
+    // 時刻情報のないTCPフィードバックは集中して届く場合がある。移動量の超過分を
+    // サンプル間で持ち越し、受信間隔の短縮は一定範囲だけ許容する。
+    // 低速・停止期間で超過分を減らすが、無制限の余裕は蓄積しない。
+    // 移動量の絶対値を使い、反転によって速度超過が相殺されるのを防ぐ。
     excess_distance_ = std::max(0.0, excess_distance_ + std::abs(delta) - limit * dt);
     const bool fault = excess_distance_ > limit * jitter_tolerance_sec;
     position_ = position;
@@ -82,6 +82,6 @@ private:
   double excess_distance_{0.0};
 };
 
-}  // namespace tb20e_control
+}  // tb20e_control名前空間
 
 #endif  // TB20E_CONTROL__FEEDBACK_VELOCITY_HPP_

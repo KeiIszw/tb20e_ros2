@@ -26,8 +26,8 @@ namespace tb20e_control
 namespace gamepad
 {
 
-// Command order must match the ForwardCommandController joint order:
-// swing, boom, arm, bucket.
+// 指令の順序はForwardCommandControllerの関節順序と一致させる。
+// 旋回、ブーム、アーム、バケットの順。
 constexpr std::size_t kCommandCount = 4;
 
 struct Mapping
@@ -80,7 +80,7 @@ inline std::array<double, kCommandCount> map_axes(
   };
 }
 
-}  // namespace gamepad
-}  // namespace tb20e_control
+}  // gamepad名前空間
+}  // tb20e_control名前空間
 
 #endif  // TB20E_CONTROL__GAMEPAD_MAPPING_HPP_

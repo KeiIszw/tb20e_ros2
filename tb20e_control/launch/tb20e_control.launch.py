@@ -102,7 +102,7 @@ MAXIMUM_ARGUMENTS = {
 
 
 def load_lever_parameters(context):
-    # Resolve the selected controller file at launch time; explicit CLI values win.
+    # 起動時に選択したコントローラファイルを解決する。明示的なCLI値を優先する。
     path = LaunchConfiguration("controllers_file").perform(context)
     with open(path, encoding="utf-8") as stream:
         document = yaml.safe_load(stream)

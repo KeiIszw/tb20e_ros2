@@ -94,14 +94,14 @@ TEST(MathUtils, DetectsImplausibleFeedbackVelocity)
       degrees_to_radians(1.0), 0.0, degrees_to_radians(180.0)));
 }
 
-}  // namespace
+}  // 名前空間
 
 TEST(FeedbackVelocity, FirstReadUsesSampleIntervalInsteadOfTinyControllerPeriod)
 {
   tb20e_control::FeedbackVelocity estimator;
   const auto t = std::chrono::steady_clock::time_point{};
   estimator.reset(0.0, t);
-  // 0.2 degrees in 5 ms = 40 deg/s; a first-loop 1 us period would falsely trip.
+  // 5ミリ秒で0.2度の変化は40度/秒。初回周期が1マイクロ秒だと誤検出する。
   EXPECT_FALSE(
     estimator.update(
       degrees_to_radians(0.2), t + std::chrono::milliseconds(5), false,
@@ -161,7 +161,7 @@ TEST(FeedbackVelocity, CompressedUnityDeliveryDoesNotTrip)
   tb20e_control::FeedbackVelocity estimator;
   const auto t = std::chrono::steady_clock::time_point{};
   estimator.reset(0.0, t);
-  // 100 deg/s source, delivered at alternating 39 ms / 1 ms intervals.
+  // 100度/秒の入力を、39ミリ秒と1ミリ秒の間隔で交互に受信する。
   for (int i = 1; i <= 100; ++i) {
     const int receipt_ms = i * 20 + (i % 2 ? 19 : 0);
     EXPECT_FALSE(
@@ -177,7 +177,7 @@ TEST(FeedbackVelocity, SustainedOverspeedAccumulatesEvenWithReversals)
     tb20e_control::FeedbackVelocity estimator;
     const auto t = std::chrono::steady_clock::time_point{};
     estimator.reset(0.0, t);
-    // 240 deg/s exceeds the 5.4 degree jitter budget after five 20 ms samples.
+    // 240度/秒では、20ミリ秒のサンプル5回でジッタ許容量の5.4度を超える。
     for (int i = 1; i <= 5; ++i) {
       const double position = reverse ? (i % 2) * 4.8 : i * 4.8;
       EXPECT_EQ(

@@ -99,7 +99,7 @@ bool parse_bool_parameter(
   return false;
 }
 
-}  // namespace
+}  // 名前空間
 
 namespace tb20e_control
 {
@@ -339,8 +339,8 @@ hardware_interface::return_type Tb20eLeverHardware::read(
 
   {
     std::lock_guard<std::mutex> lock(feedback_mutex_);
-    // Sample the clock under the same lock as receipt timestamps: a callback
-    // must not publish a newer timestamp between clock sampling and inspection.
+    // 受信時刻と同じロック内で時計を取得する。時計の取得から検査までの間に、
+    // コールバックが新しい時刻を登録しないようにする。
     const auto now = std::chrono::steady_clock::now();
     for (std::size_t axis = 0; axis < kAxisCount; ++axis) {
       if (!feedback_[axis].received) {
@@ -393,8 +393,8 @@ hardware_interface::return_type Tb20eLeverHardware::write(
   std::array<double, kAxisCount> feedback_ages{};
   {
     std::lock_guard<std::mutex> lock(feedback_mutex_);
-    // Sample the clock under the same lock as receipt timestamps: a callback
-    // must not publish a newer timestamp between clock sampling and inspection.
+    // 受信時刻と同じロック内で時計を取得する。時計の取得から検査までの間に、
+    // コールバックが新しい時刻を登録しないようにする。
     const auto now = std::chrono::steady_clock::now();
     for (std::size_t axis = 0; axis < kAxisCount; ++axis) {
       fresh[axis] = feedback_is_fresh(feedback_[axis], now);
@@ -783,7 +783,7 @@ void Tb20eLeverHardware::stop_executor()
     try {
       executor->remove_node(node_);
     } catch (const std::exception &) {
-      // The context may already be shut down. There is nothing else to release here.
+      // コンテキストは既に終了している場合があり、ここで解放するものはない。
     }
   }
   executor_.reset();
@@ -969,7 +969,7 @@ bool Tb20eLeverHardware::feedback_is_fresh(
   return std::isfinite(age_sec) && age_sec >= 0.0 && age_sec <= state_timeout_sec_;
 }
 
-}  // namespace tb20e_control
+}  // tb20e_control名前空間
 
 PLUGINLIB_EXPORT_CLASS(
   tb20e_control::Tb20eLeverHardware,

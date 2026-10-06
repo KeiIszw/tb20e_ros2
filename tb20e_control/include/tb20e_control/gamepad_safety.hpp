@@ -17,8 +17,8 @@ namespace tb20e_control
 namespace gamepad
 {
 
-// Arming requires a neutral interval and a fresh button press. A second press
-// stops immediately, including when a stick is away from neutral.
+// 操作を有効にするには、中立状態の維持と新たなボタン押下が必要。再度押すと
+// スティックが中立位置になくても直ちに停止する。
 class NeutralToggleGate
 {
 public:
@@ -34,7 +34,7 @@ public:
     previous_button_pressed_ = false;
   }
 
-  // Returns true only when the current sample is allowed to command motion.
+  // 現在のサンプルで動作指令が許可される場合に限りtrueを返す。
   bool update(
     const std::vector<float> & axes, const Mapping & mapping,
     bool button_pressed, double now_sec)
@@ -110,7 +110,7 @@ private:
   bool previous_button_pressed_{false};
 };
 
-}  // namespace gamepad
-}  // namespace tb20e_control
+}  // gamepad名前空間
+}  // tb20e_control名前空間
 
 #endif  // TB20E_CONTROL__GAMEPAD_SAFETY_HPP_
